@@ -1,80 +1,123 @@
 <script lang="ts">
   import dayjs from "dayjs";
-  import { tracker } from "./Task";
+  import { Task, tracker } from "./task";
+  import { atop, circleX, circleY, getTaskInfo, rInner, rOuter } from "./chart";
+  import TaskArc from "./TaskArc.svelte";
+  import ChartBase from "./ChartBase.svelte";
 
-  const r = 360;
-  const r2 = 240;
-  const pi180 = Math.PI / 180;
+  let tasks = tracker.tasks;
 
-  function circleX(angle: number, radius: number) {
-    return radius * Math.cos(angle * pi180);
+  let hovered: Task | null = null;
+  let titleBulletEl: SVGGraphicsElement | null = null;
+  let titleBulletWidth = 0;
+
+  function updateTitleBulletWidth(el: SVGGraphicsElement | null) {
+    if (hovered) {
+      titleBulletWidth = el?.getBBox().width ?? 0;
+    }
   }
-  function circleY(angle: number, radius: number) {
-    return radius * Math.sin(angle * pi180);
-  }
-  // angle to position on a circle with given radius as string "x y"
-  function atop(angle: number, radius: number) {
-    return `${circleX(angle, radius)} ${circleY(angle, radius)}`;
-  }
+  $: updateTitleBulletWidth(titleBulletEl);
 </script>
 
-<svg viewBox="-400 -400 800 800" height="100%" width="100%" class="mx-auto">
-  <g stroke="grey" fill="none">
-    <circle cx={0} cy={0} {r} />
-    <circle cx={0} cy={0} r={r2} />
-  </g>
-  <g class="stroke-surface-300">
-    {#each Array(24) as _, i}
-      <path
-        d="M0 {r2} V {r}"
-        transform="rotate({i * 15})"
-        stroke-dasharray="2 3"
-        stroke-dashoffset="2"
-      />
-      {#if i % 3 === 0}
-        <text
-          class="text-sm font-thin"
-          x={circleX(i * 15 - 90, r + 30)}
-          y={circleY(i * 15 - 90, r + 30)}
-          text-anchor="middle"
-          dominant-baseline="middle"
-        >
-          {i}
-        </text>
-      {/if}
-    {/each}
-  </g>
+<svg viewBox="-400 -400 800 800" height="100%" width="100%" class="mx-auto fill-token">
+  <ChartBase />
 
-  {#each $tracker.tasks as task}
-    {@const startDate = dayjs(task.startTime)}
-    {@const startDeg = (startDate.diff(dayjs().startOf("day")) / 86400000) * 360 - 90}
-    {@const endDate = dayjs(task.endTime)}
-    {@const endDeg = (endDate.diff(dayjs().startOf("day")) / 86400000) * 360 - 90}
+  {#each $tasks as task}
+    <TaskArc bind:task bind:hovered />
+  {/each}
+
+  {#if hovered}
+    {@const { startDate, startDeg, endDate, endDeg } = getTaskInfo(hovered)}
+    {@const diff = endDate.diff(startDate, "minute")}
+
+    <!-- hovered task arc -->
     <path
-      d="M {atop(startDeg, r2)}
-         L {atop(startDeg, r)}
-         A {r} {r} 0 0 1 {atop(endDeg, r)} L {atop(endDeg, r2)}
-         A {r2} {r2} 0 0 0 {atop(startDeg, r2)}"
-      stroke={task.color}
-      fill={task.color + "44"}
+      d="M {atop(startDeg, rInner)}
+      L {atop(startDeg, rOuter)}
+      A {rOuter} {rOuter} 0 0 1 {atop(endDeg, rOuter)} L {atop(endDeg, rInner)}
+      A {rInner} {rInner} 0 0 0 {atop(startDeg, rInner)}"
+      stroke={hovered.color}
+      fill="none"
+      stroke-width="2"
     />
+
+    <!-- title on circle -->
+    {@const titleX = circleX((startDeg + endDeg) / 2, rOuter - (rOuter - rInner) * 0.5)}
+    {@const titleY = circleY((startDeg + endDeg) / 2, rOuter - (rOuter - rInner) * 0.5)}
+    <g class="pointer-events-none">
+      <rect
+        x={titleX - titleBulletWidth / 2 - 10}
+        y={titleY - 10}
+        width={titleBulletWidth + 20}
+        height="20"
+        fill={hovered.color}
+        rx="5"
+      />
+      <text
+        class="text-xs font-normal"
+        x={titleX}
+        y={titleY}
+        text-anchor="middle"
+        dominant-baseline="middle"
+        bind:this={titleBulletEl}
+      >
+        {hovered.name}
+      </text>
+    </g>
+
+    <!-- center info -->
+    <g text-anchor="middle" dominant-baseline="middle" transform="translate(0, -70)">
+      <text text-anchor="middle" dominant-baseline="middle" class="text-xl font-light">
+        {hovered.name}
+      </text>
+      <text
+        text-anchor="middle"
+        dominant-baseline="middle"
+        transform="translate(0, 30)"
+        class="text-sm"
+      >
+        🕓
+        {#if diff > 60}
+          {Math.floor(diff / 60)} hour{Math.floor(diff / 60) === 1 ? "" : "s"},{" "}
+        {/if}
+        {diff % 60} minute{diff % 60 === 1 ? "" : "s"}
+      </text>
+      <text
+        text-anchor="middle"
+        dominant-baseline="middle"
+        transform="translate(0, 50)"
+        class="text-sm"
+      >
+        {#if hovered.active}
+          ⌛ Ongoing
+        {:else}
+          ✅ Finished {endDate.fromNow()}
+        {/if}
+      </text>
+    </g>
+
+    <!-- start and end times -->
     <text
-      class="text-xs font-thin fill-token"
-      x={circleX(startDeg, r + 15)}
-      y={circleY(startDeg, r + 15)}
+      class="text-xs font-extralight"
+      x={circleX(startDeg - 1.5, rOuter + 18)}
+      y={circleY(startDeg - 1.5, rOuter + 18)}
       text-anchor="middle"
       dominant-baseline="middle"
     >
       {startDate.format("H:mm")}
     </text>
-    <!-- <text -->
-    <!--   class="text-xs font-thin" -->
-    <!--   x={circleX(endDeg, r + 14)} -->
-    <!--   y={circleY(endDeg, r + 14)} -->
-    <!--   text-anchor="middle" -->
-    <!--   dominant-baseline="middle" -->
-    <!-- > -->
-    <!--   {endDate.getHours()}:{endDate.getMinutes().toString().padStart(2, "0")} -->
-    <!-- </text> -->
-  {/each}
+    <text
+      class="text-xs font-extralight"
+      x={circleX(endDeg + 1.5, rOuter + 18)}
+      y={circleY(endDeg + 1.5, rOuter + 18)}
+      text-anchor="middle"
+      dominant-baseline="middle"
+    >
+      {#if hovered.active}
+        now
+      {:else}
+        {endDate.format("H:mm")}
+      {/if}
+    </text>
+  {/if}
 </svg>

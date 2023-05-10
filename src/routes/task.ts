@@ -1,4 +1,5 @@
-import { writable } from "svelte/store";
+import { get, writable, type Writable } from "svelte/store";
+import { localStorageStore } from "@skeletonlabs/skeleton";
 
 // prettier-ignore
 export const colors = [
@@ -24,34 +25,34 @@ export const colors = [
 export type TaskColor = (typeof colors)[0];
 
 export class Task {
-  id: string;
+  id = crypto.randomUUID();
   name = "";
   color = colors[4];
   startTime = 0;
   endTime = 0;
   active = false;
-
-  constructor() {
-    this.id = crypto.randomUUID();
-  }
+  hovered = false;
 }
 
 class Tracker {
-  tasks: Task[] = [];
-  activeTask: Task | null = null;
+  tasks: Writable<Task[]> = localStorageStore("tasks", []);
   #intervalId: ReturnType<typeof setInterval> | null = null;
 
-  #refreshStore() {
-    tracker.set(this);
+  constructor() {
+    const active = get(this.tasks).find((t) => t.active);
+    if (active) {
+      this.#startTimer();
+    }
   }
 
   #startTimer() {
-    if (this.tasks[0]?.active) {
-      this.#intervalId = setInterval(() => {
-        this.tasks[0].endTime = Date.now();
-        this.#refreshStore();
-      }, 1000);
-    }
+    this.#intervalId = setInterval(() => {
+      this.tasks.update((tasks) => {
+        const active = tasks.find((t) => t.active);
+        if (active) active.endTime = Date.now();
+        return tasks;
+      });
+    }, 1000);
   }
 
   #stopTimer() {
@@ -63,30 +64,42 @@ class Tracker {
     task.startTime = Date.now();
     task.endTime = Date.now();
     task.active = true;
-    this.tasks = [task, ...this.tasks];
-    this.activeTask = task;
     this.#startTimer();
   }
 
   stop() {
-    const index = this.tasks.findIndex((t) => t.active);
-    if (index === -1) return;
-    this.tasks[index].active = false;
     this.#stopTimer();
-    this.#refreshStore();
+    this.tasks.update((tasks) => {
+      const index = tasks.findIndex((t) => t.active);
+      if (index !== -1) {
+        tasks[index].active = false;
+      }
+      return tasks;
+    });
   }
 
   addTask(task: Task) {
-    this.tasks.push(task);
-    this.#refreshStore();
+    this.tasks.update((tasks) => {
+      if (task.name === "") task.name = "Task " + (tasks.length + 1);
+      // tasks.splice(
+      //   tasks.findIndex((t) => t.startTime > task.startTime),
+      //   0,
+      //   task
+      // );
+      tasks.push(task);
+      tasks.sort((a, b) => b.startTime - a.startTime);
+      return tasks;
+    });
   }
 
   removeTask(id: string) {
-    const index = this.tasks.findIndex((t) => t.id === id);
-    if (index === -1) return;
-    this.tasks.splice(index, 1);
-    this.#refreshStore();
+    this.tasks.update((tasks) => {
+      const index = tasks.findIndex((t) => t.id === id);
+      if (index === -1) throw new Error("Task not found"); // TODO what do
+      tasks.splice(index, 1);
+      return tasks;
+    });
   }
 }
 
-export const tracker = writable(new Tracker());
+export const tracker = new Tracker();
