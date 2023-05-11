@@ -28,8 +28,8 @@ export class Task {
   id = crypto.randomUUID();
   name = "";
   color = colors[4];
-  startTime = 0;
-  endTime = 0;
+  startDate = 0;
+  endDate = 0;
   active = false;
   hovered = false;
 }
@@ -41,15 +41,16 @@ class Tracker {
   constructor() {
     const active = get(this.tasks).find((t) => t.active);
     if (active) {
-      this.#startTimer();
+      this.#startDater();
     }
   }
 
-  #startTimer() {
+  #startDater() {
     this.#intervalId = setInterval(() => {
+      console.log("tick");
       this.tasks.update((tasks) => {
         const active = tasks.find((t) => t.active);
-        if (active) active.endTime = Date.now();
+        if (active) active.endDate = Date.now();
         return tasks;
       });
     }, 1000);
@@ -61,10 +62,10 @@ class Tracker {
 
   start(task: Task) {
     this.stop();
-    task.startTime = Date.now();
-    task.endTime = Date.now();
+    task.startDate = Date.now();
+    task.endDate = Date.now();
     task.active = true;
-    this.#startTimer();
+    this.#startDater();
   }
 
   stop() {
@@ -82,12 +83,12 @@ class Tracker {
     this.tasks.update((tasks) => {
       if (task.name === "") task.name = "Task " + (tasks.length + 1);
       // tasks.splice(
-      //   tasks.findIndex((t) => t.startTime > task.startTime),
+      //   tasks.findIndex((t) => t.startDate > task.startDate),
       //   0,
       //   task
       // );
       tasks.push(task);
-      tasks.sort((a, b) => b.startTime - a.startTime);
+      tasks.sort((a, b) => b.startDate - a.startDate);
       return tasks;
     });
   }
@@ -96,6 +97,7 @@ class Tracker {
     this.tasks.update((tasks) => {
       const index = tasks.findIndex((t) => t.id === id);
       if (index === -1) throw new Error("Task not found"); // TODO what do
+      if (tasks[index].active) this.#stopTimer();
       tasks.splice(index, 1);
       return tasks;
     });
@@ -103,3 +105,5 @@ class Tracker {
 }
 
 export const tracker = new Tracker();
+
+export const taskDraft = writable(new Task());

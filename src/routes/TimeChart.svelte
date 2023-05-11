@@ -1,69 +1,95 @@
 <script lang="ts">
-  import dayjs from "dayjs";
-  import { Task, tracker } from "./task";
-  import { atop, circleX, circleY, getTaskInfo, rInner, rOuter } from "./chart";
+  import { Task, taskDraft, tracker } from "./task";
+  import { fromMs, fromPos, rInner, rOuter } from "./chart";
   import TaskArc from "./TaskArc.svelte";
   import ChartBase from "./ChartBase.svelte";
+  import BulletText from "./BulletText.svelte";
+  import dayjs from "dayjs";
 
   let tasks = tracker.tasks;
-
   let hovered: Task | null = null;
-  let titleBulletEl: SVGGraphicsElement | null = null;
-  let titleBulletWidth = 0;
+  let svgEl: SVGSVGElement;
+  let mousePos: DOMPoint | null = null;
 
-  function updateTitleBulletWidth(el: SVGGraphicsElement | null) {
-    if (hovered) {
-      titleBulletWidth = el?.getBBox().width ?? 0;
-    }
+  // TODO snap to tasks
+
+  function mouseMoved(e: MouseEvent) {
+    let pt = svgEl.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    mousePos = pt.matrixTransform(svgEl.getScreenCTM()!.inverse());
   }
-  $: updateTitleBulletWidth(titleBulletEl);
+
+  // $: console.log($taskDraft.startDate);
 </script>
 
-<svg viewBox="-400 -400 800 800" height="100%" width="100%" class="mx-auto fill-token">
-  <ChartBase />
+<svg
+  viewBox="-400 -400 800 800"
+  height="100%"
+  width="100%"
+  class="mx-auto fill-token"
+  bind:this={svgEl}
+>
+  <ChartBase
+    on:mousemove={mouseMoved}
+    on:mouseleave={() => (mousePos = null)}
+    on:mousedown={() =>
+      ($taskDraft.startDate = dayjs()
+        .startOf("day")
+        .add(fromPos(mousePos.x, mousePos.y).snapToGrid().toMs())
+        .valueOf())}
+  />
 
-  {#each $tasks as task}
-    <TaskArc bind:task bind:hovered />
+  {#each [...$tasks].reverse() as task}
+    <TaskArc
+      {task}
+      on:mouseenter={() => {
+        hovered = task;
+        task.hovered = true;
+      }}
+      on:mouseleave={() => {
+        hovered = null;
+        task.hovered = false;
+      }}
+    />
   {/each}
 
+  {#if mousePos}
+    <circle cx={mousePos.x} cy={mousePos.y} r="5" fill="red" class="pointer-events-none" />
+    <text text-anchor="middle" dominant-baseline="middle" class="pointer-events-none">
+      {fromPos(mousePos.x, mousePos.y).snapToGrid().toDeg().toFixed(2)}
+      {"|"}
+      <!-- NOW: here -->
+      {fromPos(mousePos.x, mousePos.y).snapToGrid().time.toFixed(2)}
+    </text>
+    <path
+      d="M0 {-rInner} V {-rOuter}"
+      transform="rotate({fromPos(mousePos.x, mousePos.y).snapToGrid().toDeg() - 90})"
+      stroke-width="2"
+      stroke={$taskDraft.color}
+      class="pointer-events-none"
+    />
+  {/if}
+
   {#if hovered}
-    {@const { startDate, startDeg, endDate, endDeg } = getTaskInfo(hovered)}
+    {@const startDate = dayjs(hovered.startDate)}
+    {@const endDate = dayjs(hovered.endDate)}
     {@const diff = endDate.diff(startDate, "minute")}
 
-    <!-- hovered task arc -->
-    <path
-      d="M {atop(startDeg, rInner)}
-      L {atop(startDeg, rOuter)}
-      A {rOuter} {rOuter} 0 0 1 {atop(endDeg, rOuter)} L {atop(endDeg, rInner)}
-      A {rInner} {rInner} 0 0 0 {atop(startDeg, rInner)}"
-      stroke={hovered.color}
-      fill="none"
-      stroke-width="2"
-    />
+    <TaskArc task={hovered} outline fat />
 
     <!-- title on circle -->
-    {@const titleX = circleX((startDeg + endDeg) / 2, rOuter - (rOuter - rInner) * 0.5)}
-    {@const titleY = circleY((startDeg + endDeg) / 2, rOuter - (rOuter - rInner) * 0.5)}
-    <g class="pointer-events-none">
-      <rect
-        x={titleX - titleBulletWidth / 2 - 10}
-        y={titleY - 10}
-        width={titleBulletWidth + 20}
-        height="20"
-        fill={hovered.color}
-        rx="5"
-      />
-      <text
-        class="text-xs font-normal"
-        x={titleX}
-        y={titleY}
-        text-anchor="middle"
-        dominant-baseline="middle"
-        bind:this={titleBulletEl}
-      >
-        {hovered.name}
-      </text>
-    </g>
+    {@const taskCenter = fromMs(hovered.startDate + (hovered.endDate - hovered.startDate) / 2)}
+    <text>{taskCenter.toMs() / 1000 / 60 / 60}</text>
+    <text y="40">{(hovered.endDate - hovered.startDate) / 2 / 1000 / 60 / 60}</text>
+    <text y="60">{(hovered.endDate - hovered.startDate) / 2}</text>
+    <BulletText
+      x={taskCenter.toPosX(rOuter - (rOuter - rInner) / 2)}
+      y={taskCenter.toPosY(rOuter - (rOuter - rInner) / 2)}
+      color={hovered.color}
+    >
+      {hovered.name}
+    </BulletText>
 
     <!-- center info -->
     <g text-anchor="middle" dominant-baseline="middle" transform="translate(0, -70)">
@@ -97,10 +123,11 @@
     </g>
 
     <!-- start and end times -->
+    <!-- TODO + 1.5 deg -->
     <text
       class="text-xs font-extralight"
-      x={circleX(startDeg - 1.5, rOuter + 18)}
-      y={circleY(startDeg - 1.5, rOuter + 18)}
+      x={fromMs(hovered.startDate).toPosX(rOuter + 18)}
+      y={fromMs(hovered.startDate).toPosY(rOuter + 18)}
       text-anchor="middle"
       dominant-baseline="middle"
     >
@@ -108,8 +135,8 @@
     </text>
     <text
       class="text-xs font-extralight"
-      x={circleX(endDeg + 1.5, rOuter + 18)}
-      y={circleY(endDeg + 1.5, rOuter + 18)}
+      x={fromMs(hovered.endDate).toPosX(rOuter + 18)}
+      y={fromMs(hovered.endDate).toPosY(rOuter + 18)}
       text-anchor="middle"
       dominant-baseline="middle"
     >

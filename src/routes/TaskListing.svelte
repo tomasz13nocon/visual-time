@@ -5,7 +5,7 @@
 
   export let task: Task;
 
-  $: activeTaskElapsed = task.endTime - task.startTime;
+  $: activeTaskElapsed = task.endDate - task.startDate;
 
   let editing = false;
   $: if (editing && nameInput) nameInput.focus();
@@ -75,10 +75,10 @@
   </div>
 
   <div class="w-fit ml-auto text-sm">
-    {dayjs(task.startTime).format("H:mm")}
+    {dayjs(task.startDate).format("H:mm")}
     -
     {#if !task.active}
-      {dayjs(task.endTime).format("H:mm")}
+      {dayjs(task.endDate).format("H:mm")}
     {/if}
   </div>
 </div>
