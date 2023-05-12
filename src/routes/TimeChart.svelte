@@ -19,8 +19,6 @@
     pt.y = e.clientY;
     mousePos = pt.matrixTransform(svgEl.getScreenCTM()!.inverse());
   }
-
-  // $: console.log($taskDraft.startDate);
 </script>
 
 <svg
@@ -33,11 +31,14 @@
   <ChartBase
     on:mousemove={mouseMoved}
     on:mouseleave={() => (mousePos = null)}
-    on:mousedown={() =>
-      ($taskDraft.startDate = dayjs()
-        .startOf("day")
-        .add(fromPos(mousePos.x, mousePos.y).snapToGrid().toMs())
-        .valueOf())}
+    on:mousedown={() => {
+      if (mousePos) {
+        $taskDraft.startDate = dayjs()
+          .startOf("day")
+          .add(fromPos(mousePos.x, mousePos.y).snapToGrid().toMs())
+          .valueOf();
+      }
+    }}
   />
 
   {#each [...$tasks].reverse() as task}
@@ -56,15 +57,9 @@
 
   {#if mousePos}
     <circle cx={mousePos.x} cy={mousePos.y} r="5" fill="red" class="pointer-events-none" />
-    <text text-anchor="middle" dominant-baseline="middle" class="pointer-events-none">
-      {fromPos(mousePos.x, mousePos.y).snapToGrid().toDeg().toFixed(2)}
-      {"|"}
-      <!-- NOW: here -->
-      {fromPos(mousePos.x, mousePos.y).snapToGrid().time.toFixed(2)}
-    </text>
     <path
       d="M0 {-rInner} V {-rOuter}"
-      transform="rotate({fromPos(mousePos.x, mousePos.y).snapToGrid().toDeg() - 90})"
+      transform="rotate({fromPos(mousePos.x, mousePos.y).snapToGrid().toDeg()})"
       stroke-width="2"
       stroke={$taskDraft.color}
       class="pointer-events-none"
@@ -80,9 +75,6 @@
 
     <!-- title on circle -->
     {@const taskCenter = fromMs(hovered.startDate + (hovered.endDate - hovered.startDate) / 2)}
-    <text>{taskCenter.toMs() / 1000 / 60 / 60}</text>
-    <text y="40">{(hovered.endDate - hovered.startDate) / 2 / 1000 / 60 / 60}</text>
-    <text y="60">{(hovered.endDate - hovered.startDate) / 2}</text>
     <BulletText
       x={taskCenter.toPosX(rOuter - (rOuter - rInner) / 2)}
       y={taskCenter.toPosY(rOuter - (rOuter - rInner) / 2)}
@@ -123,11 +115,12 @@
     </g>
 
     <!-- start and end times -->
-    <!-- TODO + 1.5 deg -->
+    {@const startTimePos = fromMs(hovered.startDate - 1000 * 60 * 5)}
+    {@const endTimePos = fromMs(hovered.endDate + 1000 * 60 * 5)}
     <text
       class="text-xs font-extralight"
-      x={fromMs(hovered.startDate).toPosX(rOuter + 18)}
-      y={fromMs(hovered.startDate).toPosY(rOuter + 18)}
+      x={startTimePos.toPosX(rOuter + 18)}
+      y={startTimePos.toPosY(rOuter + 18)}
       text-anchor="middle"
       dominant-baseline="middle"
     >
@@ -135,8 +128,8 @@
     </text>
     <text
       class="text-xs font-extralight"
-      x={fromMs(hovered.endDate).toPosX(rOuter + 18)}
-      y={fromMs(hovered.endDate).toPosY(rOuter + 18)}
+      x={endTimePos.toPosX(rOuter + 18)}
+      y={endTimePos.toPosY(rOuter + 18)}
       text-anchor="middle"
       dominant-baseline="middle"
     >

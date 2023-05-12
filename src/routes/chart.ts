@@ -91,7 +91,6 @@ export function fromDeg(deg: number) {
 }
 
 export function fromMs(ms: number) {
-  // return new TimePos((ms / (24 * 60 * 60 * 1000)) % 1);
   return new TimePos(
     dayjs(ms).diff(dayjs(ms).hour(0).minute(0).second(0).millisecond(0), "day", true)
   );
@@ -99,5 +98,7 @@ export function fromMs(ms: number) {
 
 export function fromPos(x: number, y: number) {
   // negate y to convert from screen to cartesian
-  return new TimePos((Math.atan2(y, x) + Math.PI) / (Math.PI * 2));
+  // negate atan2 to go clockwise
+  // add 2.5pi, div by 2pi and modulo 1 to start at 12 o'clock and get a value between 0 and 1
+  return new TimePos(((-Math.atan2(-y, x) + Math.PI * 2.5) / (Math.PI * 2)) % 1);
 }

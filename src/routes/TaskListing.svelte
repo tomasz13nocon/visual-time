@@ -56,9 +56,11 @@
         <IconButton icon="eva:square-fill" small on:click={() => tracker.stop()} />
       {/if}
       <div class="text-xl">
-        {`${Math.floor(activeTaskElapsed / 1000 / 60 / 60)}:${Math.floor(
-          (activeTaskElapsed / 1000 / 60) % 60
-        )
+        {`${
+          activeTaskElapsed > 1000 * 60 * 60
+            ? Math.floor(activeTaskElapsed / 1000 / 60 / 60) + ":"
+            : ""
+        }${Math.floor((activeTaskElapsed / 1000 / 60) % 60)
           .toString()
           .padStart(2, "0")}:${Math.floor((activeTaskElapsed / 1000) % 60)
           .toString()
