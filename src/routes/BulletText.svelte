@@ -1,7 +1,9 @@
 <script lang="ts">
+  import { textColorOn } from "$lib/util";
+
   export let x: number;
   export let y: number;
-  export let color = "#888";
+  export let color = "#888888";
 
   let titleBulletEl: SVGGraphicsElement | null = null;
   let titleBulletWidth = 0;
@@ -28,6 +30,7 @@
     text-anchor="middle"
     dominant-baseline="middle"
     bind:this={titleBulletEl}
+    fill={textColorOn(color, "#fff", "#000")}
   >
     <slot />
   </text>

@@ -1,5 +1,6 @@
 import { get, writable, type Writable } from "svelte/store";
 import { localStorageStore } from "@skeletonlabs/skeleton";
+import { selectedDate } from "$lib/stores";
 
 // prettier-ignore
 export const colors = [
@@ -11,7 +12,7 @@ export const colors = [
   "#0ea5e9",
   "#8b5cf6",
   "#d946ef",
-  "#888888",
+  "#707070",
   // { bg: "bg-red-500", text: "text-red-500", stroke: "stroke-red-500", fill: "fill-red-500", border: "border-red-500" },
   // { bg: "bg-amber-500", text: "text-amber-500", stroke: "stroke-amber-500", fill: "fill-amber-500", border: "border-amber-500" },
   // { bg: "bg-lime-500", text: "text-lime-500", stroke: "stroke-lime-500", fill: "fill-lime-500", border: "border-lime-500" },
@@ -39,13 +40,24 @@ class Tracker {
   #intervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
+    selectedDate.subscribe((selected) => {
+      console.log(selected.format());
+      this.tasks.update((tasks) =>
+        // Get tasks from db
+        tasks.filter(
+          (t) =>
+            t.endDate > selected.startOf("day").valueOf() &&
+            t.startDate < selected.endOf("day").valueOf()
+        )
+      );
+    });
     const active = get(this.tasks).find((t) => t.active);
     if (active) {
-      this.#startDater();
+      this.#startTimer();
     }
   }
 
-  #startDater() {
+  #startTimer() {
     this.#intervalId = setInterval(() => {
       console.log("tick");
       this.tasks.update((tasks) => {
@@ -65,7 +77,7 @@ class Tracker {
     task.startDate = Date.now();
     task.endDate = Date.now();
     task.active = true;
-    this.#startDater();
+    this.#startTimer();
   }
 
   stop() {

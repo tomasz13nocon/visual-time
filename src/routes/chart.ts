@@ -1,5 +1,3 @@
-import dayjs from "dayjs";
-
 export const rOuter = 360;
 export const rInner = 240;
 const gridStepMinutes = 5;
@@ -91,9 +89,9 @@ export function fromDeg(deg: number) {
 }
 
 export function fromMs(ms: number) {
-  return new TimePos(
-    dayjs(ms).diff(dayjs(ms).hour(0).minute(0).second(0).millisecond(0), "day", true)
-  );
+  // dayjs(ms).diff(dayjs(ms).hour(0).minute(0).second(0).millisecond(0), "day", true)
+  // TODO handle timezones properly
+  return new TimePos((ms / 1000 / 60 - new Date().getTimezoneOffset()) / 60 / 24);
 }
 
 export function fromPos(x: number, y: number) {

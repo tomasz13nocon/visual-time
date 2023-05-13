@@ -1,7 +1,7 @@
 <script lang="ts">
   import { tracker, Task } from "./task";
-  import IconButton from "$lib/IconButton.svelte";
-  import dayjs from "dayjs";
+  import IconButton from "$lib/components/IconButton.svelte";
+  import dayjs from "$lib/dayjs";
 
   export let task: Task;
 

@@ -4,7 +4,7 @@
   import TaskArc from "./TaskArc.svelte";
   import ChartBase from "./ChartBase.svelte";
   import BulletText from "./BulletText.svelte";
-  import dayjs from "dayjs";
+  import dayjs from "$lib/dayjs";
 
   let tasks = tracker.tasks;
   let hovered: Task | null = null;
@@ -32,11 +32,10 @@
     on:mousemove={mouseMoved}
     on:mouseleave={() => (mousePos = null)}
     on:mousedown={() => {
+      // TODO sometimes we get 59:59 instead of 00:00
       if (mousePos) {
-        $taskDraft.startDate = dayjs()
-          .startOf("day")
-          .add(fromPos(mousePos.x, mousePos.y).snapToGrid().toMs())
-          .valueOf();
+        $taskDraft.startDate = fromPos(mousePos.x, mousePos.y).snapToGrid().toMs();
+        console.log(dayjs($taskDraft.startDate).format());
       }
     }}
   />
@@ -56,7 +55,6 @@
   {/each}
 
   {#if mousePos}
-    <circle cx={mousePos.x} cy={mousePos.y} r="5" fill="red" class="pointer-events-none" />
     <path
       d="M0 {-rInner} V {-rOuter}"
       transform="rotate({fromPos(mousePos.x, mousePos.y).snapToGrid().toDeg()})"
@@ -72,6 +70,10 @@
     {@const diff = endDate.diff(startDate, "minute")}
 
     <TaskArc task={hovered} outline fat />
+
+    <text>
+      {fromMs(hovered.startDate).time.toFixed(2)}
+    </text>
 
     <!-- title on circle -->
     {@const taskCenter = fromMs(hovered.startDate + (hovered.endDate - hovered.startDate) / 2)}
