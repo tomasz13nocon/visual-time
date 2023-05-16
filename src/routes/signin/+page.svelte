@@ -1,16 +1,22 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
   import { auth } from "$lib/auth";
-  import { signInWithEmailAndPassword } from "firebase/auth";
+  import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
   import { FirebaseError } from "firebase/app";
   import { goto } from "$app/navigation";
 
   let creatingAcc = false;
+  let email = "";
+  let password = "";
   let error = "";
+  let passwordError = "";
 
-  async function signin() {
+  async function signup() {
+    validatePassword();
+    if (passwordError) return;
+
     try {
-      await signInWithEmailAndPassword(auth, "tomasz13nocon@gmail.com", "qweasd");
+      await createUserWithEmailAndPassword(auth, email, password);
       goto("/");
     } catch (e) {
       if (e instanceof FirebaseError) {
@@ -24,9 +30,48 @@
       }
     }
   }
+
+  async function signin() {
+    validatePassword();
+    if (passwordError) return;
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      goto("/");
+    } catch (e) {
+      if (e instanceof FirebaseError) {
+        if (e.code === "") {
+          error = ""; // TODO
+        }
+      } else {
+        error = "Oops! Something went wrong.";
+      }
+    }
+  }
+
+  function validatePassword() {
+    if (password.length < 6) {
+      passwordError = "Password needs to be at least 6 characters";
+    } else {
+      passwordError = "";
+    }
+  }
+
+  async function test() {
+    const token = await auth.currentUser?.getIdToken();
+    if (!token) return;
+    let resp = await fetch("/api/tasks", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log(resp);
+  }
 </script>
 
 <section class="flex flex-col w-96 mx-auto my-16 gap-4">
+  <button class="btn variant-filled-primary" on:click={test}> TEST </button>
   <h1>
     {#if creatingAcc}
       Create account
@@ -44,15 +89,26 @@
         </div>
       </div>
     {/if}
-    <label>
-      <span class="label">Email</span>
-      <input required type="email" name="email" class="input" />
+    <label class="label">
+      <span>Email</span>
+      <input required type="email" name="email" class="input" bind:value={email} />
     </label>
-    <label>
-      <span class="label">Password</span>
-      <input required type="password" name="password" class="input" />
+    <label class="label">
+      <span>Password</span>
+      <input
+        required
+        type="password"
+        name="password"
+        class="input {passwordError ? 'input-error' : ''}"
+        on:blur={validatePassword}
+        on:focus={() => (passwordError = "")}
+        bind:value={password}
+      />
+      {#if passwordError}
+        <div class="text-error-700-200-token">{passwordError}</div>
+      {/if}
     </label>
-    <button type="submit" class="btn variant-filled-primary">
+    <button class="btn variant-filled-primary" on:click={creatingAcc ? signup : signin}>
       {#if creatingAcc}
         Create account
       {:else}
@@ -61,7 +117,6 @@
     </button>
   </form>
 
-  <button class="btn variant-filled-primary" on:click={signin}> CLICK </button>
   <button class="text-secondary-800-100-token" on:click={() => (creatingAcc = !creatingAcc)}>
     {#if creatingAcc}
       Already have an account? Sign in
@@ -70,3 +125,14 @@
     {/if}
   </button>
 </section>
+
+<button
+  class="btn variant-filled-primary"
+  on:click={() => {
+    email = "tomasz13nocon@gmail.com";
+    password = "qweasd";
+    signin();
+  }}
+>
+  CLICK
+</button>

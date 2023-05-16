@@ -1,6 +1,7 @@
 import { get, writable, type Writable } from "svelte/store";
 import { localStorageStore } from "@skeletonlabs/skeleton";
 import { selectedDate } from "$lib/stores";
+import { auth } from "$lib/auth";
 
 // prettier-ignore
 export const colors = [
@@ -36,34 +37,36 @@ export class Task {
 }
 
 class Tracker {
-  tasks: Writable<Task[]> = localStorageStore("tasks", []);
+  tasks: Writable<Task>[] = [];
+  activeTask: Writable<Task> | null = null;
   #intervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
     selectedDate.subscribe((selected) => {
       console.log(selected.format());
-      this.tasks.update((tasks) =>
-        // Get tasks from db
-        tasks.filter(
-          (t) =>
-            t.endDate > selected.startOf("day").valueOf() &&
-            t.startDate < selected.endOf("day").valueOf()
-        )
-      );
+      fetch(
+        `/api/tasks?from=${selected.startOf("day").valueOf()}&to=${selected.endOf("day").valueOf()}`
+      )
+        .then((res) => res.json())
+        .then((tasks) => {
+          this.tasks = tasks.map((t: Task) => writable(t));
+          this.activeTask = this.tasks.find((t) => get(t).active) ?? null; // TODO keep track of active task even on diff days
+          if (this.activeTask) {
+            this.#startTimer();
+          } else {
+            this.#stopTimer();
+          }
+        });
     });
-    const active = get(this.tasks).find((t) => t.active);
-    if (active) {
-      this.#startTimer();
-    }
   }
 
   #startTimer() {
     this.#intervalId = setInterval(() => {
       console.log("tick");
-      this.tasks.update((tasks) => {
-        const active = tasks.find((t) => t.active);
-        if (active) active.endDate = Date.now();
-        return tasks;
+      this.activeTask?.update((task) => {
+        // TODO opt chaining? u sure?
+        if (task) task.endDate = Date.now();
+        return task;
       });
     }, 1000);
   }
@@ -77,42 +80,51 @@ class Tracker {
     task.startDate = Date.now();
     task.endDate = Date.now();
     task.active = true;
+    this.activeTask = this.tasks.find((t) => get(t).active) ?? null;
     this.#startTimer();
+
+    auth.currentUser
+      ?.getIdToken()
+      .then((token) =>
+        fetch("/api/tasks", {
+          method: "POST",
+          body: JSON.stringify(task),
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+      )
+      .then((res) => res.json())
+      .then((task) => console.log(task));
   }
 
   stop() {
     this.#stopTimer();
-    this.tasks.update((tasks) => {
-      const index = tasks.findIndex((t) => t.active);
-      if (index !== -1) {
-        tasks[index].active = false;
-      }
-      return tasks;
-    });
+    this.activeTask = null;
+    this.tasks
+      .find((t) => get(t).active)
+      ?.update((task) => {
+        task.active = false;
+        return task;
+      });
   }
 
   addTask(task: Task) {
-    this.tasks.update((tasks) => {
-      if (task.name === "") task.name = "Task " + (tasks.length + 1);
-      // tasks.splice(
-      //   tasks.findIndex((t) => t.startDate > task.startDate),
-      //   0,
-      //   task
-      // );
-      tasks.push(task);
-      tasks.sort((a, b) => b.startDate - a.startDate);
-      return tasks;
-    });
+    if (task.name === "") task.name = "Task " + (this.tasks.length + 1);
+    this.tasks.splice(
+      this.tasks.findIndex((t) => get(t).startDate > task.startDate),
+      0,
+      writable(task)
+    );
+    // this.tasks.push(writable(task));
+    // this.tasks.sort((a, b) => b.startDate - a.startDate);
   }
 
   removeTask(id: string) {
-    this.tasks.update((tasks) => {
-      const index = tasks.findIndex((t) => t.id === id);
-      if (index === -1) throw new Error("Task not found"); // TODO what do
-      if (tasks[index].active) this.#stopTimer();
-      tasks.splice(index, 1);
-      return tasks;
-    });
+    const index = this.tasks.findIndex((t) => get(t).id === id);
+    if (index === -1) throw new Error("Task not found"); // TODO what do
+    if (get(this.tasks[index]).active) this.#stopTimer();
+    this.tasks.splice(index, 1);
   }
 }
 

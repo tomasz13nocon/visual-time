@@ -5,6 +5,7 @@
   import { selectedDate } from "$lib/stores";
   import { Tab, TabGroup } from "@skeletonlabs/skeleton";
   import Controls from "./Controls.svelte";
+  import Icon from "@iconify/svelte";
 
   let tabSet = 0;
 </script>
@@ -29,18 +30,20 @@
   </aside>
 
   <section class="mx-auto w-full h-full p-4 box-border">
-    <div class="flex gap-2 absolute">
-      <IconButton
-        small
-        icon="eva:arrow-left-fill"
+    <div class="flex absolute input-group w-auto">
+      <button
+        class="variant-soft-primary !px-1"
         on:click={() => ($selectedDate = $selectedDate.subtract(1, "day"))}
-      />
+      >
+        <Icon icon="eva:arrow-left-fill" class="h-full w-8" />
+      </button>
       <DatePicker bind:date={$selectedDate} />
-      <IconButton
-        small
-        icon="eva:arrow-right-fill"
+      <button
+        class="variant-soft-primary !px-1"
         on:click={() => ($selectedDate = $selectedDate.add(1, "day"))}
-      />
+      >
+        <Icon icon="eva:arrow-right-fill" class="h-full w-8" />
+      </button>
     </div>
     <TimeChart />
   </section>

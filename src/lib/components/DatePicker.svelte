@@ -14,4 +14,4 @@
   $: fromStr(dateStr);
 </script>
 
-<input type="date" class="input px-3 w-48" bind:value={dateStr} />
+<input type="date" class="" bind:value={dateStr} />
