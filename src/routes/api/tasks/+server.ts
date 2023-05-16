@@ -6,9 +6,10 @@ export const GET = (async ({ request, url }) => {
   const { user_id, errResp } = await authorize(request);
   if (errResp) return errResp;
 
-  let from = url.searchParams.get("from");
-  let to = url.searchParams.get("to");
-  let query = "SELECT * FROM tasks WHERE user_id = $1";
+  const from = url.searchParams.get("from");
+  const to = url.searchParams.get("to");
+  let query =
+    'SELECT user_id as "userId", id, name, color, start_date as "startDate", end_date as "endDate", active FROM tasks WHERE user_id = $1';
   if (from) {
     query += " AND end_date >= $2";
     // from = parseInt(from);
@@ -17,6 +18,7 @@ export const GET = (async ({ request, url }) => {
     query += " AND start_date <= $3";
     // to = parseInt(to);
   }
+  query += " ORDER BY start_date DESC";
   const result = await db.query(query, [user_id, from, to]);
 
   return new Response(JSON.stringify(result.rows));
@@ -45,5 +47,5 @@ export const POST = (async ({ request, url }) => {
     [user_id, name, color, parseInt(startDate), parseInt(endDate), active]
   );
 
-  return new Response(JSON.stringify(result.rows));
+  return new Response(JSON.stringify(result.rows[0]));
 }) satisfies RequestHandler;

@@ -1,26 +1,27 @@
 <script lang="ts">
   import type { Task } from "./task";
   import { fromMs, rInner, rOuter } from "./chart";
+  import type { Writable } from "svelte/store";
 
-  export let task: Task;
+  export let task: Writable<Task>;
   export let outline = false;
   export let fat = false;
 
-  $: startT = fromMs(task.startDate);
-  $: endT = fromMs(task.endDate);
+  $: startT = fromMs($task.startDate);
+  $: endT = fromMs($task.endDate);
   $: short = endT.toDeg() - startT.toDeg() < 0.5;
 </script>
 
 <defs>
   <path
-    id="task-path-{task.id}"
+    id="task-path-{$task.id}"
     d="M {startT.toPosStr(rInner)}
     L {startT.toPosStr(rOuter)}
     A {rOuter} {rOuter} 0 0 1 {endT.toPosStr(rOuter)} L {endT.toPosStr(rInner)}
     A {rInner} {rInner} 0 0 0 {startT.toPosStr(rInner)} Z"
   />
-  <clipPath id="task-clip-{task.id}">
-    <use href="#task-path-{task.id}" />
+  <clipPath id="task-clip-{$task.id}">
+    <use href="#task-path-{$task.id}" />
   </clipPath>
 </defs>
 
@@ -39,11 +40,11 @@
 <!--   ).toFixed(2)} : {startT.time.toFixed(2)} : {endT.time.toFixed(2)} -->
 <!-- </text> -->
 <use
-  href="#task-path-{task.id}"
-  clip-path={short ? "" : `url(#task-clip-${task.id})`}
-  stroke={task.color}
+  href="#task-path-{$task.id}"
+  clip-path={short ? "" : `url(#task-clip-${$task.id})`}
+  stroke={$task.color}
   stroke-width={fat && !short ? 4 : 2}
-  fill={outline ? "none" : task.color + "44"}
+  fill={outline ? "none" : $task.color + "44"}
   class="cursor-pointer"
   class:pointer-events-none={outline}
   on:mouseenter

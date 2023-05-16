@@ -12,7 +12,6 @@
   onMount(() => {
     onAuthStateChanged(auth, (userData) => {
       $user = userData;
-      console.log(userData);
     });
   });
 

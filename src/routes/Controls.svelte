@@ -10,11 +10,11 @@
   let tasks = tracker.tasks;
 
   // TODO remove
-  let idSet = new Set();
-  for (let task of $tasks) {
-    if (idSet.has(task.id)) console.error("Duplicate task id: ", task.id, " for task: ", task.name);
-    else idSet.add(task.id);
-  }
+  // let idSet = new Set();
+  // for (let task of tasks) {
+  //   if (idSet.has(task.id)) console.error("Duplicate task id: ", task.id, " for task: ", task.name);
+  //   else idSet.add(task.id);
+  // }
 </script>
 
 <div class="p-2 flex flex-col gap-4">
@@ -27,8 +27,7 @@
       icon="eva:arrow-right-fill"
       on:click={() => {
         $taskDraft.startDate = Date.now();
-        tracker.addTask($taskDraft);
-        tracker.start($taskDraft);
+        tracker.addTask($taskDraft, true);
 
         let oldColor = $taskDraft.color;
         $taskDraft = new Task();

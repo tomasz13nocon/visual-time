@@ -33,3 +33,15 @@ export const PUT = (async ({ request, url, params }) => {
 
   return new Response(JSON.stringify(result.rows));
 }) satisfies RequestHandler;
+
+export const DELETE = (async ({ request, url, params }) => {
+  const { user_id, errResp } = await authorize(request);
+  if (errResp) return errResp;
+
+  try {
+    await db.query("DELETE FROM tasks WHERE user_id = $1 AND id = $2", [user_id, params.id]);
+    return new Response();
+  } catch (e) {
+    return new Response(e instanceof Error ? e.message : "", { status: 500 });
+  }
+}) satisfies RequestHandler;
