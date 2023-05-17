@@ -1,3 +1,6 @@
+import { get } from "svelte/store";
+import { selectedDateEnd, selectedDateStart } from "./stores";
+
 export function textColorOn(bgColor: string, lightColor: string, darkColor: string) {
   if (bgColor.length !== 7 && bgColor.length !== 9) {
     throw new Error("bgColor must be a 6 or 8 digit hex color string");
@@ -14,4 +17,13 @@ export function textColorOn(bgColor: string, lightColor: string, darkColor: stri
   });
   const L = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
   return L > 0.179 ? darkColor : lightColor;
+}
+
+// Don't subscribe to selectedDate to prevent UI shift while fetching tasks
+// Whenever selectedDate changes, all tasks will be updated anyway
+export function clampStart(ms: number) {
+  return Math.max(ms, get(selectedDateStart).valueOf());
+}
+export function clampEnd(ms: number) {
+  return Math.min(ms, get(selectedDateEnd).valueOf());
 }

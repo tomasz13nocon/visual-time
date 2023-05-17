@@ -1,6 +1,5 @@
 <script lang="ts">
   import DatePicker from "$lib/components/DatePicker.svelte";
-  import IconButton from "$lib/components/IconButton.svelte";
   import TimeChart from "./TimeChart.svelte";
   import { selectedDate } from "$lib/stores";
   import { Tab, TabGroup } from "@skeletonlabs/skeleton";
@@ -32,19 +31,20 @@
   <section class="mx-auto w-full h-full p-4 box-border">
     <div class="flex absolute input-group w-auto">
       <button
-        class="variant-soft-primary !px-1"
+        class="btn-icon variant-soft-primary !px-1"
         on:click={() => ($selectedDate = $selectedDate.subtract(1, "day"))}
       >
         <Icon icon="eva:arrow-left-fill" class="h-full w-8" />
       </button>
       <DatePicker bind:date={$selectedDate} />
       <button
-        class="variant-soft-primary !px-1"
+        class="btn-icon variant-soft-primary !px-1"
         on:click={() => ($selectedDate = $selectedDate.add(1, "day"))}
       >
         <Icon icon="eva:arrow-right-fill" class="h-full w-8" />
       </button>
     </div>
+
     <TimeChart />
   </section>
 </div>

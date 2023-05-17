@@ -1,16 +1,19 @@
 <script lang="ts">
-  import { Task, taskDraft, tracker } from "./task";
+  import { Task, createTaskDraft, taskDraft, tracker } from "./task";
   import { fromPos, rInner, rOuter } from "./chart";
   import TaskArc from "./TaskArc.svelte";
   import ChartBase from "./ChartBase.svelte";
-  import dayjs from "$lib/dayjs";
   import type { Writable } from "svelte/store";
   import HoverElements from "./HoverElements.svelte";
+  import OverflowBullets from "./OverflowBullets.svelte";
+  import { selectedDateStart, user } from "$lib/stores";
 
   let tasks = tracker.tasks;
   let hovered: Writable<Task> | null = null;
   let svgEl: SVGSVGElement;
   let mousePos: DOMPoint | null = null;
+  let drawing = false;
+  let drawingPivot = 0;
 
   // TODO snap to tasks
 
@@ -19,6 +22,18 @@
     pt.x = e.clientX;
     pt.y = e.clientY;
     mousePos = pt.matrixTransform(svgEl.getScreenCTM()!.inverse());
+
+    if (drawing) {
+      const newValue = $selectedDateStart
+        .add(fromPos(mousePos.x, mousePos.y).snapToGrid().toMs(), "ms")
+        .valueOf();
+      if (drawingPivot <= newValue) {
+        $taskDraft.endDate = newValue;
+      }
+      if (drawingPivot >= newValue) {
+        $taskDraft.startDate = newValue;
+      }
+    }
   }
 </script>
 
@@ -33,15 +48,24 @@
     on:mousemove={mouseMoved}
     on:mouseleave={() => (mousePos = null)}
     on:mousedown={() => {
-      // TODO sometimes we get 59:59 instead of 00:00
+      drawing = true;
       if (mousePos) {
-        $taskDraft.startDate = fromPos(mousePos.x, mousePos.y).snapToGrid().toMs();
-        console.log(dayjs($taskDraft.startDate).format());
+        const start = $selectedDateStart
+          .add(fromPos(mousePos.x, mousePos.y).snapToGrid().toMs(), "ms")
+          .valueOf();
+        $taskDraft.startDate = start;
+        $taskDraft.endDate = start;
+        drawingPivot = start;
       }
+    }}
+    on:mouseup={() => {
+      drawing = false;
+      tracker.addTask($taskDraft);
+      $taskDraft = createTaskDraft($taskDraft);
     }}
   />
 
-  {#each $tasks as task}
+  {#each [...$tasks].reverse() as task}
     <TaskArc
       {task}
       on:mouseenter={() => {
@@ -61,7 +85,8 @@
     />
   {/each}
 
-  {#if mousePos}
+  <!-- line "cursor" -->
+  {#if mousePos && !drawing}
     <path
       d="M0 {-rInner} V {-rOuter}"
       transform="rotate({fromPos(mousePos.x, mousePos.y).snapToGrid().toDeg()})"
@@ -71,7 +96,16 @@
     />
   {/if}
 
+  <!-- arc being drawn -->
+  {#if drawing}
+    <TaskArc task={taskDraft} pointerEventsNone fat dashArray />
+  {/if}
+
   {#if hovered}
     <HoverElements task={hovered} />
   {/if}
+
+  {#each $tasks as task}
+    <OverflowBullets {task} />
+  {/each}
 </svg>

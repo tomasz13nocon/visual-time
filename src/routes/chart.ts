@@ -1,7 +1,7 @@
 export const rOuter = 360;
 export const rInner = 240;
 const gridStepMinutes = 5;
-const gridStep = gridStepMinutes / (24 * 60);
+const gridStep = gridStepMinutes * 60 * 1000;
 
 // All functions dealing with degrees are adjusted to having 0 degrees at 12 o'clock
 // export function degToPosX(angle: number, radius: number) {
@@ -46,28 +46,30 @@ const gridStep = gridStepMinutes / (24 * 60);
 ////////////////////////
 
 /**
- * Stores a time offset from the beginning of the day
- * Provides utilities for converting between degrees, milliseconds and coordinates on a circle
+ * Stores time and provides utilities for converting between degrees, milliseconds and coordinates on a circle
  * Meant to be created with factory functions
  */
 class TimePos {
-  // time as fraction of a day
   time: number;
 
   constructor(time: number) {
     this.time = time;
   }
 
+  toDay() {
+    return this.time / (24 * 60 * 60 * 1000);
+  }
+
   toDeg() {
-    return this.time * 360;
+    return this.toDay() * 360;
   }
 
   toPosX(radius = 1) {
-    return Math.sin(this.time * 2 * Math.PI) * radius;
+    return Math.sin(this.toDay() * 2 * Math.PI) * radius;
   }
 
   toPosY(radius = 1) {
-    return -Math.cos(this.time * 2 * Math.PI) * radius;
+    return -Math.cos(this.toDay() * 2 * Math.PI) * radius;
   }
 
   toPosStr(radius = 1) {
@@ -75,7 +77,7 @@ class TimePos {
   }
 
   toMs() {
-    return this.time * 24 * 60 * 60 * 1000;
+    return this.time;
   }
 
   snapToGrid() {
@@ -85,18 +87,20 @@ class TimePos {
 }
 
 export function fromDeg(deg: number) {
-  return new TimePos(deg / 360);
+  return new TimePos((deg / 360) * 24 * 60 * 60 * 1000);
 }
 
 export function fromMs(ms: number) {
   // dayjs(ms).diff(dayjs(ms).hour(0).minute(0).second(0).millisecond(0), "day", true)
   // TODO handle timezones properly
-  return new TimePos((ms / 1000 / 60 - new Date().getTimezoneOffset()) / 60 / 24);
+  return new TimePos(ms - new Date().getTimezoneOffset() * 60 * 1000);
 }
 
 export function fromPos(x: number, y: number) {
   // negate y to convert from screen to cartesian
   // negate atan2 to go clockwise
   // add 2.5pi, div by 2pi and modulo 1 to start at 12 o'clock and get a value between 0 and 1
-  return new TimePos(((-Math.atan2(-y, x) + Math.PI * 2.5) / (Math.PI * 2)) % 1);
+  return new TimePos(
+    (((-Math.atan2(-y, x) + Math.PI * 2.5) / (Math.PI * 2)) % 1) * 24 * 60 * 60 * 1000
+  );
 }

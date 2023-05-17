@@ -7,7 +7,7 @@
 </script>
 
 <button
-  class="{filled ? 'variant-filled-primary' : 'variant-soft-primary'} {small
+  class="shrink-0 btn-icon {filled ? 'variant-filled-primary' : 'variant-soft-primary'} {small
     ? 'btn-icon-xs'
     : 'btn-icon text-4xl'}"
   on:click

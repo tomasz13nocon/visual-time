@@ -1,26 +1,25 @@
 <script lang="ts">
   import TaskListing from "./TaskListing.svelte";
-  import { Task, taskDraft, tracker, colors } from "./task";
+  import { Task, taskDraft, tracker, colors, createTaskDraft } from "./task";
   import IconButton from "$lib/components/IconButton.svelte";
   import dayjs from "$lib/dayjs";
+  import { selectedDate } from "$lib/stores";
 
   let from = "";
   let to = "";
 
   let tasks = tracker.tasks;
-
-  // TODO remove
-  // let idSet = new Set();
-  // for (let task of tasks) {
-  //   if (idSet.has(task.id)) console.error("Duplicate task id: ", task.id, " for task: ", task.name);
-  //   else idSet.add(task.id);
-  // }
 </script>
 
 <div class="p-2 flex flex-col gap-4">
   <div class="flex gap-2 items-center">
     <label class="label">
-      <input class="input py-1 px-3" type="text" placeholder="Task" bind:value={$taskDraft.name} />
+      <input
+        class="input"
+        type="text"
+        placeholder="What are you working on?"
+        bind:value={$taskDraft.name}
+      />
     </label>
 
     <IconButton
@@ -28,27 +27,26 @@
       on:click={() => {
         $taskDraft.startDate = Date.now();
         tracker.addTask($taskDraft, true);
-
-        let oldColor = $taskDraft.color;
-        $taskDraft = new Task();
-        $taskDraft.color = oldColor;
+        $taskDraft = createTaskDraft($taskDraft);
       }}
     />
 
     <IconButton
       icon="eva:plus-fill"
-      on:click={() =>
-        tracker.addTask({
-          ...$taskDraft,
-          startDate: dayjs(from, "H:m").valueOf(),
-          endDate: dayjs(to, "H:m").valueOf(),
-        })}
+      on:click={() => {
+        const now = $selectedDate.format("YYYY-MM-DD") + "_";
+        const format = "YYYY-MM-DD_H:m";
+        $taskDraft.startDate = dayjs(now + from, format).valueOf();
+        $taskDraft.endDate = dayjs(now + to, format).valueOf();
+        tracker.addTask($taskDraft);
+        $taskDraft = createTaskDraft($taskDraft);
+      }}
     />
   </div>
 
   <div class="flex gap-2">
-    <input class="input px-3" type="time" bind:value={from} />
-    <input class="input px-3" type="time" bind:value={to} />
+    <input class="input py-1" type="time" bind:value={from} />
+    <input class="input py-1" type="time" bind:value={to} />
   </div>
 
   <div class="flex gap-1">

@@ -2,7 +2,8 @@
   import { tracker, Task } from "./task";
   import IconButton from "$lib/components/IconButton.svelte";
   import dayjs from "$lib/dayjs";
-  import type { Writable } from "svelte/store";
+  import { get, type Writable } from "svelte/store";
+  import { user } from "$lib/stores";
 
   export let task: Writable<Task>;
 
@@ -19,8 +20,8 @@
     ? 'bg-secondary-300/50 dark:bg-secondary-900/75'
     : ''}"
 >
-  <div class="flex justify-between">
-    <div class="flex gap-2">
+  <div class="flex justify-between gap-2">
+    <div class="flex gap-2 items-center">
       {#if editing}
         <input
           class="input"
@@ -29,6 +30,8 @@
           bind:this={nameInput}
           on:blur={() => {
             editing = false;
+            console.log(get(task));
+            get(task).update($user);
           }}
           on:keydown={(e) => {
             if (e.key === "Enter" || e.key === "Escape") {
@@ -38,11 +41,11 @@
         />
       {:else}
         <div
-          class="px-2 rounded-token border-2"
+          class="px-2 rounded-md border-2"
           style:background-color={$task.color + "22"}
           style:border-color={$task.color}
         >
-          {$task.name || "Unnamed Task"}
+          {$task.name}
         </div>
         <IconButton
           icon="eva:edit-fill"
@@ -54,13 +57,13 @@
       {/if}
     </div>
 
-    <div class="flex gap-2">
+    <div class="flex gap-2 items-center">
       {#if $task.active}
         <IconButton icon="eva:square-fill" small on:click={() => tracker.stop()} />
       {/if}
       <div class="text-xl">
         {`${
-          activeTaskElapsed > 1000 * 60 * 60
+          activeTaskElapsed >= 1000 * 60 * 60
             ? Math.floor(activeTaskElapsed / 1000 / 60 / 60) + ":"
             : ""
         }${Math.floor((activeTaskElapsed / 1000 / 60) % 60)

@@ -1,9 +1,8 @@
 import { derived, get, writable, type Writable } from "svelte/store";
-import { localStorageStore } from "@skeletonlabs/skeleton";
-import { selectedDate, user } from "$lib/stores";
-import { auth } from "$lib/auth";
+import { fetchingTasks, selectedDate, selectedDateEnd, selectedDateStart, user } from "$lib/stores";
 import type { Dayjs } from "dayjs";
 import type { User } from "firebase/auth";
+import dayjs from "dayjs";
 
 // prettier-ignore
 export const colors = [
@@ -26,16 +25,102 @@ export const colors = [
   // { bg: "bg-surface-300", text: "text-surface-300", stroke: "stroke-surface-300", fill: "fill-surface-500", border: "border-surface-300" },
 ];
 
+export const colorsLight = [
+  "#F5768C",
+  "#F9A36E",
+  "#F9C34E",
+  "#A3D06B",
+  // "#5CC8D6",
+  "#5CA9F9",
+  "#A17CF7",
+  "#D46CF7",
+  "#A3A3A3",
+];
+
+export const defaultTaskNames = [
+  "Inventing Flux Capacitor",
+  "Starting a billion dollar company",
+  "Eating pizza",
+  "Writing the script for my inevitable biopic",
+  // "Unleashing Imagination Beast",
+  "Embarking on Epic Quest",
+  "Creative Chaos Creation",
+  "Sailing the Sea of Inspiration",
+  // "Marvelous Masterpiece Crafting",
+  // "Conquering the Innovation Galaxy",
+  "Unraveling the Mystery of Time",
+  // "Dream-Weaving Extravaganza",
+  "Experiencing Zenith of Productivity",
+  "Summoning the Muse's Magic",
+  "Diving into Knowledge Abyss",
+  // "Whirling Dance of Productivity",
+  "Quest for the Perfect Solution",
+  "Brainstorming Bonanza",
+  "Crafting Wonders of Creativity",
+  "Symphony of Task Accomplishment",
+  "Taming the Chaos Dragon",
+  "Expedition to Efficiency Island",
+  "Building Bridges of Success",
+  "Igniting the Spark of Innovation",
+  "Painting the Canvas of Achievement",
+  "Trailblazing Towards Excellence",
+  "Choreography of Accomplishment",
+  "Sculpting the Path of Progress",
+  "Capturing the Essence of Brilliance",
+  "Soaring to New Heights of Achievement",
+  "Unleashing the Power of Focus",
+  "Juggling Acts of Success",
+  "Scripting Success Stories",
+  // "Riding the Wave of Productivity"
+];
+
 export type TaskColor = (typeof colors)[0];
 
 export class Task {
-  id = crypto.randomUUID();
+  id = -1;
   name = "";
   color = colors[4];
   startDate = 0;
   endDate = 0;
   active = false;
   hovered = false;
+
+  constructor(init?: Partial<Task>) {
+    if (init) Object.assign(this, init);
+  }
+
+  async save(user: User | null) {
+    if (user) {
+      const resp = await authedFetch(user, `/api/tasks`, {
+        method: "POST",
+        body: JSON.stringify(this),
+      });
+      return resp.json();
+    } else {
+      // TODO local storage
+    }
+  }
+
+  async update(user: User | null) {
+    if (user) {
+      const resp = await authedFetch(user, `/api/tasks/${this.id}`, {
+        method: "PUT",
+        body: JSON.stringify(this),
+      });
+    } else {
+      // TODO local storage
+    }
+  }
+
+  async delete(user: User | null) {
+    if (user) {
+      const resp = await authedFetch(user, `/api/tasks/${this.id}`, {
+        method: "DELETE",
+      });
+    } else {
+      // TODO local storage
+    }
+  }
 }
 
 // TODO add try catch everywhere
@@ -51,53 +136,14 @@ async function authedFetch(user: User, input: RequestInfo | URL, init?: RequestI
   });
 }
 
-// TODO figure out DB ids
-
-async function fetchTasks(selectedDate: Dayjs, user: User | null) {
+async function fetchTasks(from: Dayjs, to: Dayjs, user: User | null) {
   if (!user) {
     // TODO local storage
     return [];
   }
-  const resp = await authedFetch(
-    user,
-    `/api/tasks?from=${selectedDate.startOf("day").valueOf()}&to=${selectedDate
-      .endOf("day")
-      .valueOf()}`
-  );
+  const resp = await authedFetch(user, `/api/tasks?from=${from.valueOf()}&to=${to.valueOf()}`);
   const json = await resp.json();
   return json;
-}
-
-async function saveTask(task: Task, user: User | null) {
-  if (user) {
-    const resp = await authedFetch(user, `/api/tasks`, {
-      method: "POST",
-      body: JSON.stringify(task),
-    });
-  } else {
-    // TODO local storage
-  }
-}
-
-async function updateTask(task: Task, user: User | null) {
-  if (user) {
-    const resp = await authedFetch(user, `/api/tasks/${task.id}`, {
-      method: "PUT",
-      body: JSON.stringify(task),
-    });
-  } else {
-    // TODO local storage
-  }
-}
-
-async function deleteTask(task: Task, user: User | null) {
-  if (user) {
-    const resp = await authedFetch(user, `/api/tasks/${task.id}`, {
-      method: "DELETE",
-    });
-  } else {
-    // TODO local storage
-  }
 }
 
 // TODO subscribe to user and store in private field
@@ -107,39 +153,35 @@ class Tracker {
   #intervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
-    console.log("Tracker constructor");
-    selectedDate.subscribe((selectedDate) => {
-      console.log("selectedDate changed", selectedDate.format());
-      fetchTasks(selectedDate, get(user)).then(this.#assignTasks.bind(this));
-    });
-    user.subscribe((user) => {
-      console.log("user changed");
-      fetchTasks(get(selectedDate), user).then(this.#assignTasks.bind(this));
-    });
-  }
-
-  // Sets the tasks store and activeTask from tasks returned from the API
-  #assignTasks(tasks: Task[]) {
-    // If what we're fetching doesn't contain the active task then we won't know about it,
-    // and activeTask will be null even though it exists in the DB.
-    // Generally at first load we always fetch current day, and active tasks can only be in current day, so should be fine.
-    this.tasks.set(
-      tasks.map((t: Task) => {
-        const task = writable(t);
-        if (t.active) {
-          t.endDate = Date.now(); // To reduce delay of waiting for first interval
-          this.activeTask = task;
-          this.#stopTimer();
-          this.#startTimer();
-        }
-        return task;
-      })
+    derived([selectedDateStart, selectedDateEnd, user], (stores) => stores).subscribe(
+      ([selectedDateStart, selectedDateEnd, user]) => {
+        fetchingTasks.set(true);
+        fetchTasks(selectedDateStart, selectedDateEnd, user).then((tasks: Task[]) => {
+          // If what we're fetching doesn't contain the active task then we won't know about it,
+          // and activeTask will be null even though it exists in the DB.
+          // Generally at first load we always fetch current day, and active tasks can only be in current day, so should be fine.
+          this.tasks.set(
+            tasks.map((apiTask: Task) => {
+              const task = new Task(apiTask);
+              const taskStore = writable(task);
+              if (task.active) {
+                task.endDate = Date.now(); // To reduce delay of waiting for first interval
+                this.activeTask = taskStore;
+                this.#stopTimer();
+                this.#startTimer();
+              }
+              return taskStore;
+            })
+          );
+          fetchingTasks.set(false);
+        });
+      }
     );
   }
 
   #startTimer() {
     this.#intervalId = setInterval(() => {
-      console.log("tick");
+      // console.log("tick");
       // TODO if null cancel interval?
       this.activeTask?.update((task) => {
         task!.endDate = Date.now();
@@ -154,21 +196,20 @@ class Tracker {
 
   stop() {
     this.#stopTimer();
-    this.activeTask = null;
-    this.tasks.update((tasks) => {
-      const task = tasks.find((t) => get(t).active);
-      task?.update((task) => {
+    if (this.activeTask) {
+      this.activeTask.update((task) => {
         task.active = false;
-        updateTask(task, get(user));
+        task.update(get(user));
         return task;
       });
-      return tasks;
-    });
+    }
+    this.activeTask = null;
   }
 
-  // TODO sort everywhere
-
   addTask(task: Task, startTracking = false) {
+    if (task.name === "")
+      task.name = defaultTaskNames[Math.floor(Math.random() * defaultTaskNames.length)];
+
     if (startTracking) {
       this.stop();
       task.endDate = Date.now();
@@ -176,24 +217,26 @@ class Tracker {
       this.#startTimer();
     }
 
-    this.tasks.update((tasks) => {
-      if (task.name === "") task.name = "Task " + (tasks.length + 1);
-      const newTask = writable(task);
-      tasks.splice(
-        tasks.findIndex((t) => get(t).startDate > task.startDate),
-        0,
-        newTask
-      );
-      // this.tasks.push(writable(task));
-      // this.tasks.sort((a, b) => b.startDate - a.startDate);
-      if (startTracking) this.activeTask = newTask;
-      return tasks;
-    });
+    const newTask = writable(task);
 
-    saveTask(task, get(user));
+    if (startTracking) this.activeTask = newTask;
+
+    if (get(selectedDate).isSame(task.startDate, "day")) {
+      this.tasks.update((tasks) => {
+        const index = tasks.findIndex((t) => get(t).startDate < task.startDate);
+        tasks.splice(index === -1 ? tasks.length : index, 0, newTask);
+        // tasks.push(newTask);
+        // tasks.sort((a, b) => get(a).startDate - get(b).startDate);
+        return tasks;
+      });
+    }
+
+    task.save(get(user)).then((savedTask) => {
+      task.id = savedTask.id;
+    });
   }
 
-  removeTask(id: string) {
+  removeTask(id: number) {
     this.tasks.update((tasks) =>
       tasks.filter((t) => {
         const task = get(t);
@@ -202,13 +245,20 @@ class Tracker {
             this.#stopTimer();
             this.activeTask = null;
           }
-          deleteTask(task, get(user));
+          task.delete(get(user));
           return false;
         }
         return true;
       })
     );
   }
+}
+
+export function createTaskDraft(task: Task) {
+  const oldColor = task.color;
+  const ret = new Task();
+  ret.color = oldColor;
+  return ret;
 }
 
 const tracker = new Tracker();

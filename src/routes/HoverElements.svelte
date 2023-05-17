@@ -1,19 +1,24 @@
 <script lang="ts">
-  import type { Writable } from "svelte/store";
-  import type { Task } from "./task";
+  import { type Writable, get } from "svelte/store";
+  import { colors, colorsLight, type Task } from "./task";
   import dayjs from "dayjs";
   import TaskArc from "./TaskArc.svelte";
   import { fromMs, rInner, rOuter } from "./chart";
   import BulletText from "./BulletText.svelte";
+  import { clampEnd, clampStart } from "$lib/util";
+  import { selectedDate, selectedDateEnd, selectedDateStart } from "$lib/stores";
 
   export let task: Writable<Task>;
 
   let startDate = dayjs($task.startDate);
   let endDate = dayjs($task.endDate);
   let diff = endDate.diff(startDate, "minute");
-  let taskCenter = fromMs($task.startDate + ($task.endDate - $task.startDate) / 2);
-  let startTimePos = fromMs($task.startDate - 1000 * 60 * 5);
-  let endTimePos = fromMs($task.endDate + 1000 * 60 * 5);
+  const clampedStart = clampStart($task.startDate);
+  const clampedEnd = clampEnd($task.endDate);
+  let taskCenter = fromMs(clampedStart + (clampedEnd - clampedStart) / 2);
+  let startTimePos = fromMs(clampedStart - 1000 * 60 * 5);
+  let endTimePos = fromMs(clampedEnd + 1000 * 60 * 5);
+  const diffDays = endDate.startOf("day").diff(startDate.startOf("day"), "day");
 </script>
 
 <TaskArc {task} outline fat />
@@ -22,7 +27,7 @@
 <BulletText
   x={taskCenter.toPosX(rOuter - (rOuter - rInner) / 2)}
   y={taskCenter.toPosY(rOuter - (rOuter - rInner) / 2)}
-  color={$task.color}
+  color={colorsLight[colors.indexOf($task.color)] ?? $task.color}
 >
   {$task.name}
 </BulletText>
@@ -39,7 +44,7 @@
     class="text-sm"
   >
     🕓
-    {#if diff > 60}
+    {#if diff >= 60}
       {Math.floor(diff / 60)} hour{Math.floor(diff / 60) === 1 ? "" : "s"},{" "}
     {/if}
     {diff % 60} minute{diff % 60 === 1 ? "" : "s"}
@@ -67,6 +72,9 @@
   dominant-baseline="middle"
 >
   {startDate.format("H:mm")}
+  {#if !startDate.isSame(get(selectedDate), "day")}
+    {` (-${diffDays}d)`}
+  {/if}
 </text>
 <text
   class="text-xs font-extralight"
@@ -79,5 +87,8 @@
     now
   {:else}
     {endDate.format("H:mm")}
+  {/if}
+  {#if !endDate.isSame(get(selectedDate), "day")}
+    {` (+${diffDays}d)`}
   {/if}
 </text>
