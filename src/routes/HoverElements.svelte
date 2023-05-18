@@ -6,31 +6,34 @@
   import { fromMs, rInner, rOuter } from "./chart";
   import BulletText from "./BulletText.svelte";
   import { clampEnd, clampStart } from "$lib/util";
-  import { selectedDate, selectedDateEnd, selectedDateStart } from "$lib/stores";
+  import { selectedDate } from "$lib/stores";
 
   export let task: Writable<Task>;
+  export let selected: boolean;
 
-  let startDate = dayjs($task.startDate);
-  let endDate = dayjs($task.endDate);
-  let diff = endDate.diff(startDate, "minute");
-  const clampedStart = clampStart($task.startDate);
-  const clampedEnd = clampEnd($task.endDate);
-  let taskCenter = fromMs(clampedStart + (clampedEnd - clampedStart) / 2);
-  let startTimePos = fromMs(clampedStart - 1000 * 60 * 5);
-  let endTimePos = fromMs(clampedEnd + 1000 * 60 * 5);
-  const diffDays = endDate.startOf("day").diff(startDate.startOf("day"), "day");
+  $: startDate = dayjs($task.startDate);
+  $: endDate = dayjs($task.endDate);
+  $: diff = endDate.diff(startDate, "minute");
+  $: clampedStart = clampStart($task.startDate);
+  $: clampedEnd = clampEnd($task.endDate);
+  $: taskCenter = fromMs(clampedStart + (clampedEnd - clampedStart) / 2);
+  $: startTimePos = fromMs(clampedStart - 1000 * 60 * 5);
+  $: endTimePos = fromMs(clampedEnd + 1000 * 60 * 5);
+  $: diffDays = endDate.startOf("day").diff(startDate.startOf("day"), "day");
 </script>
 
 <TaskArc {task} outline fat />
 
 <!-- title on circle -->
-<BulletText
-  x={taskCenter.toPosX(rOuter - (rOuter - rInner) / 2)}
-  y={taskCenter.toPosY(rOuter - (rOuter - rInner) / 2)}
-  color={colorsLight[colors.indexOf($task.color)] ?? $task.color}
->
-  {$task.name}
-</BulletText>
+{#key $task}
+  <BulletText
+    x={taskCenter.toPosX(rOuter - (rOuter - rInner) / 2)}
+    y={taskCenter.toPosY(rOuter - (rOuter - rInner) / 2)}
+    color={colorsLight[colors.indexOf($task.color)] ?? $task.color}
+  >
+    {$task.name}
+  </BulletText>
+{/key}
 
 <!-- center info -->
 <g text-anchor="middle" dominant-baseline="middle" transform="translate(0, -70)">

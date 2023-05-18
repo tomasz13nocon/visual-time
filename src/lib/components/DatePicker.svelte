@@ -18,4 +18,4 @@
   }
 </script>
 
-<input type="date" class="input" bind:value={dateStr} on:change={dateChanged} />
+<input type="date" class="input {$$props.class}" bind:value={dateStr} on:change={dateChanged} />

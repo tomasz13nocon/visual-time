@@ -7,3 +7,9 @@ declare namespace App {
 	// interface Error {}
 	// interface Platform {}
 }
+
+declare namespace svelte.JSX {
+	interface HTMLAttributes<T> {
+		onclickOutside: ({ detail: EventTarget }) => void;
+	}
+}

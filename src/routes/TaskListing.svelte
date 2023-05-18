@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { tracker, Task } from "./task";
+  import { tracker, Task, taskDraft } from "./task";
   import IconButton from "$lib/components/IconButton.svelte";
   import dayjs from "$lib/dayjs";
-  import { get, type Writable } from "svelte/store";
+  import type { Writable } from "svelte/store";
   import { user } from "$lib/stores";
 
   export let task: Writable<Task>;
+  export let hovered: boolean;
 
   $: activeTaskElapsed = $task.endDate - $task.startDate;
 
@@ -16,9 +17,9 @@
 </script>
 
 <div
-  class="-mx-2 -my-1 px-2 py-1 {$task.hovered
-    ? 'bg-secondary-300/50 dark:bg-secondary-900/75'
-    : ''}"
+  class="-mx-2 -my-1 px-2 py-1 {hovered ? 'bg-tertiary-400 dark:bg-secondary-900/75' : ''}"
+  on:mouseenter
+  on:mouseleave
 >
   <div class="flex justify-between gap-2">
     <div class="flex gap-2 items-center">
@@ -30,8 +31,7 @@
           bind:this={nameInput}
           on:blur={() => {
             editing = false;
-            console.log(get(task));
-            get(task).update($user);
+            $task.update($user);
           }}
           on:keydown={(e) => {
             if (e.key === "Enter" || e.key === "Escape") {
@@ -54,6 +54,18 @@
             editing = true;
           }}
         />
+        {#if !$task.active}
+          <IconButton
+            icon="eva:arrow-right-fill"
+            small
+            on:click={() => {
+              // TODO snapToLast
+              const newTask = new Task($task);
+              newTask.startDate = Date.now();
+              tracker.addTask(newTask, true);
+            }}
+          />
+        {/if}
       {/if}
     </div>
 

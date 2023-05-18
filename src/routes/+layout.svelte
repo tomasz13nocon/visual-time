@@ -8,6 +8,7 @@
   import { auth } from "$lib/auth";
   import { user } from "$lib/stores";
   import { identicon } from "minidenticons";
+  import { clickOutside } from "$lib/clickOutside";
 
   onMount(() => {
     onAuthStateChanged(auth, (userData) => {
@@ -21,6 +22,7 @@
   }
 
   let showDropdown = false;
+  let profileBtn: HTMLButtonElement;
 </script>
 
 <AppShell slotPageContent="h-full w-full">
@@ -34,13 +36,21 @@
         {#if $user}
           <button
             on:click={() => (showDropdown = !showDropdown)}
-            class="w-12 -my-1 !ml-8 block variant-ghost-tertiary rounded-full cursor-pointer"
+            bind:this={profileBtn}
+            class="btn-icon w-10 p-1 -my-1 !ml-8 block variant-outline-primary rounded-full cursor-pointer"
           >
             <img src="data:image/svg+xml;utf8,{identicon($user.uid)}" alt="generated avatar" />
           </button>
           {#if showDropdown}
             <ul
               class="list absolute top-16 right-0 w-48 bg-surface-100-800-token rounded-lg shadow-lg"
+              use:clickOutside
+              on:clickOutside={(e) => {
+                console.log(e.detail);
+                if (!profileBtn.contains(e.detail)) {
+                  showDropdown = false;
+                }
+              }}
             >
               <a href="/profile" class="block p-4">Profile TODO</a>
               <button on:click={signOut} class="block p-4">Sign out</button>

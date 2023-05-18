@@ -7,9 +7,11 @@
   import HoverElements from "./HoverElements.svelte";
   import OverflowBullets from "./OverflowBullets.svelte";
   import { selectedDateStart, user } from "$lib/stores";
+  import { getContext } from "svelte";
 
   let tasks = tracker.tasks;
-  let hovered: Writable<Task> | null = null;
+  let hovered: Writable<Writable<Task> | null> = getContext("hovered");
+  let selected = false;
   let svgEl: SVGSVGElement;
   let mousePos: DOMPoint | null = null;
   let drawing = false;
@@ -37,12 +39,19 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <svg
   viewBox="-400 -400 800 800"
   height="100%"
   width="100%"
   class="mx-auto fill-token"
   bind:this={svgEl}
+  on:click={() => {
+    if (selected) {
+      selected = false;
+      $hovered = null;
+    }
+  }}
 >
   <ChartBase
     on:mousemove={mouseMoved}
@@ -60,8 +69,10 @@
     }}
     on:mouseup={() => {
       drawing = false;
-      tracker.addTask($taskDraft);
-      $taskDraft = createTaskDraft($taskDraft);
+      if ($taskDraft.endDate - $taskDraft.startDate !== 0) {
+        tracker.addTask($taskDraft);
+        $taskDraft = createTaskDraft($taskDraft);
+      }
     }}
   />
 
@@ -69,18 +80,15 @@
     <TaskArc
       {task}
       on:mouseenter={() => {
-        hovered = task;
-        task.update((t) => {
-          t.hovered = true;
-          return t;
-        });
+        if (!selected) $hovered = task;
       }}
       on:mouseleave={() => {
-        hovered = null;
-        task.update((t) => {
-          t.hovered = false;
-          return t;
-        });
+        if (!selected) $hovered = null;
+      }}
+      on:click={(e) => {
+        e.stopPropagation();
+        $hovered = task;
+        selected = true;
       }}
     />
   {/each}
@@ -96,13 +104,12 @@
     />
   {/if}
 
-  <!-- arc being drawn -->
   {#if drawing}
     <TaskArc task={taskDraft} pointerEventsNone fat dashArray />
   {/if}
 
-  {#if hovered}
-    <HoverElements task={hovered} />
+  {#if $hovered}
+    <HoverElements task={$hovered} {selected} />
   {/if}
 
   {#each $tasks as task}

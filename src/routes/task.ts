@@ -39,39 +39,27 @@ export const colorsLight = [
 
 export const defaultTaskNames = [
   "Inventing Flux Capacitor",
-  "Starting a billion dollar company",
+  "Creating billion dollar unicorn startup",
   "Eating pizza",
-  "Writing the script for my inevitable biopic",
-  // "Unleashing Imagination Beast",
-  "Embarking on Epic Quest",
+  "Writing script for my inevitable biopic",
+  "Conquering Constantinople",
+  "Summoning the Kraken",
+  "Painting Mona Lisa",
+  "Searching for Atlantis",
+  "Proving P != NP",
+  "Focusing intensely",
+  "Crafting pickaxe",
+  "Unraveling the mystery of time",
+  "Ascending to another dimension",
+  "Taming my pet dragon",
+  "Building time machine",
+  "Solving the Riemann hypothesis",
+  "Building Dyson sphere",
+  "Reading about trusses",
+
+  "Delaying the crisis",
   "Creative Chaos Creation",
-  "Sailing the Sea of Inspiration",
-  // "Marvelous Masterpiece Crafting",
-  // "Conquering the Innovation Galaxy",
-  "Unraveling the Mystery of Time",
-  // "Dream-Weaving Extravaganza",
-  "Experiencing Zenith of Productivity",
-  "Summoning the Muse's Magic",
   "Diving into Knowledge Abyss",
-  // "Whirling Dance of Productivity",
-  "Quest for the Perfect Solution",
-  "Brainstorming Bonanza",
-  "Crafting Wonders of Creativity",
-  "Symphony of Task Accomplishment",
-  "Taming the Chaos Dragon",
-  "Expedition to Efficiency Island",
-  "Building Bridges of Success",
-  "Igniting the Spark of Innovation",
-  "Painting the Canvas of Achievement",
-  "Trailblazing Towards Excellence",
-  "Choreography of Accomplishment",
-  "Sculpting the Path of Progress",
-  "Capturing the Essence of Brilliance",
-  "Soaring to New Heights of Achievement",
-  "Unleashing the Power of Focus",
-  "Juggling Acts of Success",
-  "Scripting Success Stories",
-  // "Riding the Wave of Productivity"
 ];
 
 export type TaskColor = (typeof colors)[0];
@@ -83,7 +71,6 @@ export class Task {
   startDate = 0;
   endDate = 0;
   active = false;
-  hovered = false;
 
   constructor(init?: Partial<Task>) {
     if (init) Object.assign(this, init);
@@ -225,14 +212,15 @@ class Tracker {
       this.tasks.update((tasks) => {
         const index = tasks.findIndex((t) => get(t).startDate < task.startDate);
         tasks.splice(index === -1 ? tasks.length : index, 0, newTask);
-        // tasks.push(newTask);
-        // tasks.sort((a, b) => get(a).startDate - get(b).startDate);
         return tasks;
       });
     }
 
     task.save(get(user)).then((savedTask) => {
-      task.id = savedTask.id;
+      newTask.update((t) => {
+        t.id = savedTask.id;
+        return t;
+      });
     });
   }
 

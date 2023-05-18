@@ -2,14 +2,13 @@
   import Icon from "@iconify/svelte";
 
   export let small = false;
-  export let filled = false;
   export let icon: string;
 </script>
 
 <button
-  class="shrink-0 btn-icon {filled ? 'variant-filled-primary' : 'variant-soft-primary'} {small
-    ? 'btn-icon-xs'
-    : 'btn-icon text-4xl'}"
+  class="shrink-0 btn-icon variant-soft-primary
+  {small ? 'btn-icon-xs' : 'text-4xl'}
+  {$$props.class}"
   on:click
 >
   <Icon {icon} />

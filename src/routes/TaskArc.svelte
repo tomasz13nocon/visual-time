@@ -10,8 +10,6 @@
   export let pointerEventsNone = false;
   export let dashArray = false;
 
-  // TODO NOW fix bullet and end/start time pos for overflowing tasks, add "+1" bullet text to indicate overflow
-
   $: startT = fromMs(clampStart($task.startDate));
   $: endT = fromMs(clampEnd($task.endDate));
   $: short = endT.toDeg() - startT.toDeg() < 0.5;
@@ -31,6 +29,7 @@
   </clipPath>
 </defs>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <use
   href="#task-path-{$task.id}"
   clip-path={short ? "" : `url(#task-clip-${$task.id})`}
@@ -42,4 +41,5 @@
   class:pointer-events-none={outline || pointerEventsNone}
   on:mouseenter
   on:mouseleave
+  on:click
 />

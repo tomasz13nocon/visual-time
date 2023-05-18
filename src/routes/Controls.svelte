@@ -4,11 +4,14 @@
   import IconButton from "$lib/components/IconButton.svelte";
   import dayjs from "$lib/dayjs";
   import { selectedDate } from "$lib/stores";
-
-  let from = "";
-  let to = "";
+  import { get, type Writable } from "svelte/store";
+  import { getContext } from "svelte";
 
   let tasks = tracker.tasks;
+  let from = "";
+  let to = "";
+  let snapToLast = false;
+  let hovered: Writable<Writable<Task> | null> = getContext("hovered");
 </script>
 
 <div class="p-2 flex flex-col gap-4">
@@ -25,7 +28,13 @@
     <IconButton
       icon="eva:arrow-right-fill"
       on:click={() => {
-        $taskDraft.startDate = Date.now();
+        console.log(snapToLast);
+        if (snapToLast && $tasks.length) {
+          $taskDraft.startDate = get($tasks[0]).endDate;
+        } else {
+          $taskDraft.startDate = Date.now();
+        }
+
         tracker.addTask($taskDraft, true);
         $taskDraft = createTaskDraft($taskDraft);
       }}
@@ -43,6 +52,11 @@
       }}
     />
   </div>
+
+  <label class="flex items-center space-x-2 w-fit">
+    <input class="checkbox" type="checkbox" bind:checked={snapToLast} />
+    <p>Start tracking from the end of last task</p>
+  </label>
 
   <div class="flex gap-2">
     <input class="input py-1" type="time" bind:value={from} />
@@ -63,7 +77,12 @@
 
   <div class="flex flex-col gap-2">
     {#each $tasks as task}
-      <TaskListing {task} />
+      <TaskListing
+        {task}
+        hovered={task === $hovered}
+        on:mouseenter={() => ($hovered = task)}
+        on:mouseleave={() => ($hovered = null)}
+      />
     {/each}
   </div>
 </div>
