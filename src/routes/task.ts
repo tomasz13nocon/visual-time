@@ -10,11 +10,10 @@ export const colors = [
   "#f97316",
   "#eab308",
   "#84cc16",
-  // "#14b8a6",
   "#0ea5e9",
   "#8b5cf6",
   "#d946ef",
-  "#707070",
+  "#878787",
   // { bg: "bg-red-500", text: "text-red-500", stroke: "stroke-red-500", fill: "fill-red-500", border: "border-red-500" },
   // { bg: "bg-amber-500", text: "text-amber-500", stroke: "stroke-amber-500", fill: "fill-amber-500", border: "border-amber-500" },
   // { bg: "bg-lime-500", text: "text-lime-500", stroke: "stroke-lime-500", fill: "fill-lime-500", border: "border-lime-500" },
@@ -23,6 +22,17 @@ export const colors = [
   // { bg: "bg-violet-500", text: "text-violet-500", stroke: "stroke-violet-500", fill: "fill-violet-500", border: "border-violet-500" },
   // { bg: "bg-fuchsia-500", text: "text-fuchsia-500", stroke: "stroke-fuchsia-500", fill: "fill-fuchsia-500", border: "border-fuchsia-500" },
   // { bg: "bg-surface-300", text: "text-surface-300", stroke: "stroke-surface-300", fill: "fill-surface-500", border: "border-surface-300" },
+];
+export const moreColors = [
+  "#9F201A",
+  "#A97648",
+  "#B4D047",
+  "#39E66A",
+  // "#14b8a6",
+  "#2CD3CF",
+  "#88BAF4",
+  "#2727E3",
+  "#141414",
 ];
 
 export const colorsLight = [

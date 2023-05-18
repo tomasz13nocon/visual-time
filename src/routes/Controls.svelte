@@ -1,17 +1,19 @@
 <script lang="ts">
   import TaskListing from "./TaskListing.svelte";
-  import { Task, taskDraft, tracker, colors, createTaskDraft } from "./task";
+  import { Task, taskDraft, tracker, colors, createTaskDraft, moreColors } from "./task";
   import IconButton from "$lib/components/IconButton.svelte";
   import dayjs from "$lib/dayjs";
   import { selectedDate } from "$lib/stores";
   import { get, type Writable } from "svelte/store";
   import { getContext } from "svelte";
+  import { localStorageStore } from "@skeletonlabs/skeleton";
 
   let tasks = tracker.tasks;
   let from = "";
   let to = "";
   let snapToLast = false;
   let hovered: Writable<Writable<Task> | null> = getContext("hovered");
+  let showMoreColors = localStorageStore("showMoreColors", false);
 </script>
 
 <div class="p-2 flex flex-col gap-4">
@@ -63,16 +65,37 @@
     <input class="input py-1" type="time" bind:value={to} />
   </div>
 
-  <div class="flex gap-1">
-    {#each colors as color}
-      <button
-        class="btn-icon {$taskDraft.color === color ? 'ring-2 ring-surface-900-50-token' : ''}"
-        style:background-color={color}
-        on:click={() => {
-          $taskDraft.color = color;
-        }}
-      />
-    {/each}
+  <div>
+    <div class="flex gap-1">
+      {#each colors as color}
+        <button
+          class="btn-icon {$taskDraft.color === color ? 'ring-2 ring-surface-900-50-token' : ''}"
+          style:background-color={color}
+          on:click={() => {
+            $taskDraft.color = color;
+          }}
+        />
+      {/each}
+    </div>
+    {#if $showMoreColors}
+      <div class="flex gap-1 mt-1">
+        {#each moreColors as color}
+          <button
+            class="btn-icon {$taskDraft.color === color ? 'ring-2 ring-surface-900-50-token' : ''}"
+            style:background-color={color}
+            on:click={() => {
+              $taskDraft.color = color;
+            }}
+          />
+        {/each}
+      </div>
+    {/if}
+    <button
+      on:click={() => ($showMoreColors = !$showMoreColors)}
+      class="block ml-auto mt-2 text-sm text-secondary-500"
+    >
+      {$showMoreColors ? "Less colors" : "More colors"}
+    </button>
   </div>
 
   <div class="flex flex-col gap-2">
