@@ -44,12 +44,9 @@
           {#if showDropdown}
             <ul
               class="list absolute top-16 right-0 w-48 bg-surface-100-800-token rounded-lg shadow-lg"
-              use:clickOutside
-              on:clickOutside={(e) => {
-                console.log(e.detail);
-                if (!profileBtn.contains(e.detail)) {
-                  showDropdown = false;
-                }
+              use:clickOutside={profileBtn}
+              on:clickOutside={() => {
+                showDropdown = false;
               }}
             >
               <a href="/profile" class="block p-4">Profile TODO</a>

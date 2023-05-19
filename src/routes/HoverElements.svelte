@@ -13,7 +13,6 @@
 
   $: startDate = dayjs($task.startDate);
   $: endDate = dayjs($task.endDate);
-  $: diff = endDate.diff(startDate, "minute");
   $: clampedStart = clampStart($task.startDate);
   $: clampedEnd = clampEnd($task.endDate);
   $: taskCenter = fromMs(clampedStart + (clampedEnd - clampedStart) / 2);
@@ -22,49 +21,7 @@
   $: diffDays = endDate.startOf("day").diff(startDate.startOf("day"), "day");
 </script>
 
-<TaskArc {task} outline fat />
-
-<!-- title on circle -->
-{#key $task}
-  <BulletText
-    x={taskCenter.toPosX(rOuter - (rOuter - rInner) / 2)}
-    y={taskCenter.toPosY(rOuter - (rOuter - rInner) / 2)}
-    color={colorsLight[colors.indexOf($task.color)] ?? $task.color}
-  >
-    {$task.name}
-  </BulletText>
-{/key}
-
-<!-- center info -->
-<g text-anchor="middle" dominant-baseline="middle" transform="translate(0, -70)">
-  <text text-anchor="middle" dominant-baseline="middle" class="text-xl font-light">
-    {$task.name}
-  </text>
-  <text
-    text-anchor="middle"
-    dominant-baseline="middle"
-    transform="translate(0, 30)"
-    class="text-sm"
-  >
-    🕓
-    {#if diff >= 60}
-      {Math.floor(diff / 60)} hour{Math.floor(diff / 60) === 1 ? "" : "s"},{" "}
-    {/if}
-    {diff % 60} minute{diff % 60 === 1 ? "" : "s"}
-  </text>
-  <text
-    text-anchor="middle"
-    dominant-baseline="middle"
-    transform="translate(0, 50)"
-    class="text-sm"
-  >
-    {#if $task.active}
-      ⌛ Ongoing
-    {:else}
-      ✅ Finished {endDate.fromNow()}
-    {/if}
-  </text>
-</g>
+<TaskArc {task} outline fat={!selected} fatter={selected} />
 
 <!-- start and end times -->
 <text
@@ -95,3 +52,14 @@
     {` (+${diffDays}d)`}
   {/if}
 </text>
+
+<!-- title on circle -->
+{#key $task}
+  <BulletText
+    x={taskCenter.toPosX(rOuter - (rOuter - rInner) / 2)}
+    y={taskCenter.toPosY(rOuter - (rOuter - rInner) / 2)}
+    color={colorsLight[colors.indexOf($task.color)] ?? $task.color}
+  >
+    {$task.name}
+  </BulletText>
+{/key}

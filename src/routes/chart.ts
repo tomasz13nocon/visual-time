@@ -1,3 +1,6 @@
+import type { Dayjs } from "dayjs";
+import type { Task } from "./task";
+
 export const rOuter = 360;
 export const rInner = 240;
 const gridStepMinutes = 5;
@@ -61,7 +64,7 @@ class TimePos {
   }
 
   toDeg() {
-    return this.toDay() * 360;
+    return (this.toDay() % 1) * 360;
   }
 
   toPosX(radius = 1) {
@@ -84,10 +87,22 @@ class TimePos {
     this.time = Math.round(this.time / gridStep) * gridStep;
     return this;
   }
+
+  snapToGridOrTasks(tasks: Task[]) {
+    for (const task of tasks) {
+      const startD = Math.abs(task.startDate - this.time);
+      const endD = Math.abs(task.endDate - this.time);
+      if (startD < gridStep || endD < gridStep * 2) {
+        this.time = startD < endD ? task.startDate : task.endDate;
+        return this;
+      }
+    }
+    return this.snapToGrid();
+  }
 }
 
-export function fromDeg(deg: number) {
-  return new TimePos((deg / 360) * 24 * 60 * 60 * 1000);
+export function fromDeg(deg: number, date?: Dayjs) {
+  return new TimePos((deg / 360) * 24 * 60 * 60 * 1000 + (date?.valueOf() ?? 0));
 }
 
 export function fromMs(ms: number) {
@@ -96,11 +111,12 @@ export function fromMs(ms: number) {
   return new TimePos(ms - new Date().getTimezoneOffset() * 60 * 1000);
 }
 
-export function fromPos(x: number, y: number) {
+export function fromPos(x: number, y: number, date?: Dayjs) {
   // negate y to convert from screen to cartesian
   // negate atan2 to go clockwise
   // add 2.5pi, div by 2pi and modulo 1 to start at 12 o'clock and get a value between 0 and 1
   return new TimePos(
-    (((-Math.atan2(-y, x) + Math.PI * 2.5) / (Math.PI * 2)) % 1) * 24 * 60 * 60 * 1000
+    (((-Math.atan2(-y, x) + Math.PI * 2.5) / (Math.PI * 2)) % 1) * 24 * 60 * 60 * 1000 +
+    (date?.valueOf() ?? 0)
   );
 }

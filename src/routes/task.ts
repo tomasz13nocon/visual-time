@@ -14,25 +14,14 @@ export const colors = [
   "#8b5cf6",
   "#d946ef",
   "#878787",
-  // { bg: "bg-red-500", text: "text-red-500", stroke: "stroke-red-500", fill: "fill-red-500", border: "border-red-500" },
-  // { bg: "bg-amber-500", text: "text-amber-500", stroke: "stroke-amber-500", fill: "fill-amber-500", border: "border-amber-500" },
-  // { bg: "bg-lime-500", text: "text-lime-500", stroke: "stroke-lime-500", fill: "fill-lime-500", border: "border-lime-500" },
-  // { bg: "bg-teal-500", text: "text-teal-500", stroke: "stroke-teal-500", fill: "fill-teal-500", border: "border-teal-500" },
-  // { bg: "bg-sky-500", text: "text-sky-500", stroke: "stroke-sky-500", fill: "fill-sky-500", border: "border-sky-500" },
-  // { bg: "bg-violet-500", text: "text-violet-500", stroke: "stroke-violet-500", fill: "fill-violet-500", border: "border-violet-500" },
-  // { bg: "bg-fuchsia-500", text: "text-fuchsia-500", stroke: "stroke-fuchsia-500", fill: "fill-fuchsia-500", border: "border-fuchsia-500" },
-  // { bg: "bg-surface-300", text: "text-surface-300", stroke: "stroke-surface-300", fill: "fill-surface-500", border: "border-surface-300" },
-];
-export const moreColors = [
-  "#9F201A",
+  "#A72620",
   "#A97648",
-  "#B4D047",
-  "#39E66A",
-  // "#14b8a6",
+  "#CDCD39",
+  "#43BB66",
   "#2CD3CF",
   "#88BAF4",
   "#2727E3",
-  "#141414",
+  "#2C2C2C",
 ];
 
 export const colorsLight = [
@@ -40,11 +29,19 @@ export const colorsLight = [
   "#F9A36E",
   "#F9C34E",
   "#A3D06B",
-  // "#5CC8D6",
   "#5CA9F9",
   "#A17CF7",
   "#D46CF7",
   "#A3A3A3",
+
+  "#A74843",
+  "#B7895F",
+  "#D4D46C",
+  "#74CF8E",
+  "#5EE0DD",
+  "#A6CCF7",
+  "#4E4EEB",
+  "#3C3C3C",
 ];
 
 export const defaultTaskNames = [
@@ -234,11 +231,15 @@ class Tracker {
     });
   }
 
-  removeTask(id: number) {
+  updateTask(task: Task) {
+    task.update(get(user));
+  }
+
+  removeTask(task: Task) {
     this.tasks.update((tasks) =>
       tasks.filter((t) => {
         const task = get(t);
-        if (task.id === id) {
+        if (task === task) {
           if (task.active) {
             this.#stopTimer();
             this.activeTask = null;

@@ -1,18 +1,17 @@
 <script lang="ts">
   import TaskListing from "./TaskListing.svelte";
-  import { Task, taskDraft, tracker, colors, createTaskDraft, moreColors } from "./task";
+  import { Task, taskDraft, tracker, colors, createTaskDraft } from "./task";
   import IconButton from "$lib/components/IconButton.svelte";
   import dayjs from "$lib/dayjs";
   import { selectedDate } from "$lib/stores";
   import { get, type Writable } from "svelte/store";
-  import { getContext } from "svelte";
   import { localStorageStore } from "@skeletonlabs/skeleton";
+  import ColorButton from "./ColorButton.svelte";
 
   let tasks = tracker.tasks;
   let from = "";
   let to = "";
   let snapToLast = false;
-  let hovered: Writable<Writable<Task> | null> = getContext("hovered");
   let showMoreColors = localStorageStore("showMoreColors", false);
 </script>
 
@@ -30,7 +29,6 @@
     <IconButton
       icon="eva:arrow-right-fill"
       on:click={() => {
-        console.log(snapToLast);
         if (snapToLast && $tasks.length) {
           $taskDraft.startDate = get($tasks[0]).endDate;
         } else {
@@ -67,10 +65,10 @@
 
   <div>
     <div class="flex gap-1">
-      {#each colors as color}
-        <button
-          class="btn-icon {$taskDraft.color === color ? 'ring-2 ring-surface-900-50-token' : ''}"
-          style:background-color={color}
+      {#each colors.slice(0, 8) as color}
+        <ColorButton
+          {color}
+          selected={$taskDraft.color === color}
           on:click={() => {
             $taskDraft.color = color;
           }}
@@ -79,10 +77,10 @@
     </div>
     {#if $showMoreColors}
       <div class="flex gap-1 mt-1">
-        {#each moreColors as color}
-          <button
-            class="btn-icon {$taskDraft.color === color ? 'ring-2 ring-surface-900-50-token' : ''}"
-            style:background-color={color}
+        {#each colors.slice(8, 16) as color}
+          <ColorButton
+            {color}
+            selected={$taskDraft.color === color}
             on:click={() => {
               $taskDraft.color = color;
             }}
@@ -100,12 +98,7 @@
 
   <div class="flex flex-col gap-2">
     {#each $tasks as task}
-      <TaskListing
-        {task}
-        hovered={task === $hovered}
-        on:mouseenter={() => ($hovered = task)}
-        on:mouseleave={() => ($hovered = null)}
-      />
+      <TaskListing {task} />
     {/each}
   </div>
 </div>

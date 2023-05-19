@@ -3,69 +3,42 @@
   import IconButton from "$lib/components/IconButton.svelte";
   import dayjs from "$lib/dayjs";
   import type { Writable } from "svelte/store";
-  import { user } from "$lib/stores";
+  import { getContext } from "svelte";
 
   export let task: Writable<Task>;
-  export let hovered: boolean;
+
+  let hovered: Writable<Writable<Task> | null> = getContext("hovered");
 
   $: activeTaskElapsed = $task.endDate - $task.startDate;
-
-  let editing = false;
-  $: if (editing && nameInput) nameInput.focus();
-
-  let nameInput: HTMLInputElement;
 </script>
 
 <div
-  class="-mx-2 -my-1 px-2 py-1 {hovered ? 'bg-tertiary-400 dark:bg-secondary-900/75' : ''}"
-  on:mouseenter
-  on:mouseleave
+  class="-mx-2 -my-1 px-2 py-1 {$hovered === task
+    ? 'bg-tertiary-400 dark:bg-secondary-900/75'
+    : ''}"
+  on:mouseenter={() => ($hovered = task)}
+  on:mouseleave={() => ($hovered = null)}
 >
   <div class="flex justify-between gap-2">
     <div class="flex gap-2 items-center">
-      {#if editing}
-        <input
-          class="input"
-          type="text"
-          bind:value={$task.name}
-          bind:this={nameInput}
-          on:blur={() => {
-            editing = false;
-            $task.update($user);
-          }}
-          on:keydown={(e) => {
-            if (e.key === "Enter" || e.key === "Escape") {
-              editing = false;
-            }
-          }}
-        />
-      {:else}
-        <div
-          class="px-2 rounded-md border-2"
-          style:background-color={$task.color + "22"}
-          style:border-color={$task.color}
-        >
-          {$task.name}
-        </div>
+      <div
+        class="px-2 rounded-md border-2"
+        style:background-color={$task.color + "22"}
+        style:border-color={$task.color}
+      >
+        {$task.name}
+      </div>
+      {#if !$task.active}
         <IconButton
-          icon="eva:edit-fill"
+          icon="eva:arrow-right-fill"
           small
           on:click={() => {
-            editing = true;
+            // TODO snapToLast
+            const newTask = new Task($task);
+            newTask.startDate = Date.now();
+            tracker.addTask(newTask, true);
           }}
         />
-        {#if !$task.active}
-          <IconButton
-            icon="eva:arrow-right-fill"
-            small
-            on:click={() => {
-              // TODO snapToLast
-              const newTask = new Task($task);
-              newTask.startDate = Date.now();
-              tracker.addTask(newTask, true);
-            }}
-          />
-        {/if}
       {/if}
     </div>
 
@@ -88,17 +61,20 @@
         icon="eva:trash-2-outline"
         small
         on:click={() => {
-          tracker.removeTask($task.id);
+          tracker.removeTask($task);
         }}
       />
     </div>
   </div>
 
-  <div class="w-fit ml-auto text-sm">
-    {dayjs($task.startDate).format("H:mm")}
-    -
-    {#if !$task.active}
-      {dayjs($task.endDate).format("H:mm")}
-    {/if}
+  <div class="flex justify-between mt-1">
+    <div class="flex gap-1" />
+    <div class="w-fit text-sm">
+      {dayjs($task.startDate).format("H:mm")}
+      -
+      {#if !$task.active}
+        {dayjs($task.endDate).format("H:mm")}
+      {/if}
+    </div>
   </div>
 </div>

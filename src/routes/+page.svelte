@@ -11,7 +11,6 @@
 
   let tabSet = 0;
   let hovered: Writable<Writable<Task> | null> = setContext("hovered", writable(null));
-  let selected: Writable<Writable<Task> | null> = setContext("selected", writable(null));
 </script>
 
 <div class="flex w-full h-full">
@@ -33,7 +32,7 @@
     </TabGroup>
   </aside>
 
-  <section class="mx-auto w-full h-full p-4 box-border">
+  <section class="mx-auto w-full h-full p-4 box-border relative">
     <div class="flex absolute w-auto">
       <IconButton
         icon="eva:arrow-ios-back-outline"

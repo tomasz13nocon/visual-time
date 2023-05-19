@@ -9,6 +9,7 @@
   export let fat = false;
   export let pointerEventsNone = false;
   export let dashArray = false;
+  export let fatter = false;
 
   $: startT = fromMs(clampStart($task.startDate));
   $: endT = fromMs(clampEnd($task.endDate));
@@ -34,7 +35,7 @@
   href="#task-path-{$task.id}"
   clip-path={short ? "" : `url(#task-clip-${$task.id})`}
   stroke={$task.color}
-  stroke-width={fat && !short ? 4 : 2}
+  stroke-width={fatter ? 6 : fat && !short ? 4 : 2}
   stroke-dasharray={dashArray ? "4 4" : ""}
   fill={outline ? "none" : $task.color + "44"}
   class="cursor-pointer"

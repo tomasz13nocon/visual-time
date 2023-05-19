@@ -3,11 +3,12 @@
   import { fromPos, rInner, rOuter } from "./chart";
   import TaskArc from "./TaskArc.svelte";
   import ChartBase from "./ChartBase.svelte";
-  import type { Writable } from "svelte/store";
+  import { get, type Writable } from "svelte/store";
   import HoverElements from "./HoverElements.svelte";
   import OverflowBullets from "./OverflowBullets.svelte";
-  import { selectedDateStart, user } from "$lib/stores";
+  import { selectedDateStart } from "$lib/stores";
   import { getContext } from "svelte";
+  import CenterTask from "./CenterTask.svelte";
 
   let tasks = tracker.tasks;
   let hovered: Writable<Writable<Task> | null> = getContext("hovered");
@@ -17,7 +18,12 @@
   let drawing = false;
   let drawingPivot = 0;
 
-  // TODO snap to tasks
+  tasks.subscribe(() => {
+    $hovered = null;
+    selected = false;
+  });
+
+  $: if ($hovered === null) selected = false;
 
   function mouseMoved(e: MouseEvent) {
     let pt = svgEl.createSVGPoint();
@@ -26,9 +32,9 @@
     mousePos = pt.matrixTransform(svgEl.getScreenCTM()!.inverse());
 
     if (drawing) {
-      const newValue = $selectedDateStart
-        .add(fromPos(mousePos.x, mousePos.y).snapToGrid().toMs(), "ms")
-        .valueOf();
+      const newValue = fromPos(mousePos.x, mousePos.y, $selectedDateStart)
+        .snapToGridOrTasks($tasks.map((taskStore) => get(taskStore)))
+        .toMs();
       if (drawingPivot <= newValue) {
         $taskDraft.endDate = newValue;
       }
@@ -59,9 +65,9 @@
     on:mousedown={() => {
       drawing = true;
       if (mousePos) {
-        const start = $selectedDateStart
-          .add(fromPos(mousePos.x, mousePos.y).snapToGrid().toMs(), "ms")
-          .valueOf();
+        const start = fromPos(mousePos.x, mousePos.y, $selectedDateStart)
+          .snapToGridOrTasks($tasks.map((taskStore) => get(taskStore)))
+          .toMs();
         $taskDraft.startDate = start;
         $taskDraft.endDate = start;
         drawingPivot = start;
@@ -116,3 +122,7 @@
     <OverflowBullets {task} />
   {/each}
 </svg>
+
+{#if $hovered}
+  <CenterTask task={$hovered} />
+{/if}
