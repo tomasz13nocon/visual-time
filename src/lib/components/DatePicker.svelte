@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Dayjs } from "dayjs";
   import dayjs from "$lib/dayjs";
+  import { selectedDate, selectedDateStart } from "$lib/stores";
 
   export let date: Dayjs;
 
@@ -11,6 +12,7 @@
   const fromStr = (str: string) => (date = dayjs(str, format));
 
   $: toStr(date);
+  $: diff = $selectedDateStart.diff(dayjs().startOf("day"), "day");
 
   function dateChanged(event: Event) {
     const target = event.target as HTMLInputElement;
@@ -18,4 +20,20 @@
   }
 </script>
 
-<input type="date" class="input {$$props.class}" bind:value={dateStr} on:change={dateChanged} />
+<input
+  type="date"
+  class="input w-52 {$$props.class}"
+  bind:value={dateStr}
+  on:change={dateChanged}
+/>
+<div class="relative">
+  <div class="absolute right-10 top-3 text-sm">
+    {diff === 0
+      ? "Today"
+      : diff === 1
+      ? "Tomorrow"
+      : diff === -1
+      ? "Yesterday"
+      : date.format("ddd")}
+  </div>
+</div>

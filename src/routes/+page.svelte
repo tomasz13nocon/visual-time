@@ -1,7 +1,7 @@
 <script lang="ts">
   import DatePicker from "$lib/components/DatePicker.svelte";
   import TimeChart from "./TimeChart.svelte";
-  import { selectedDate } from "$lib/stores";
+  import { selectedDate, selectedDateStart } from "$lib/stores";
   import { Tab, TabGroup } from "@skeletonlabs/skeleton";
   import Controls from "./Controls.svelte";
   import IconButton from "$lib/components/IconButton.svelte";
@@ -37,14 +37,14 @@
       <IconButton
         icon="eva:arrow-ios-back-outline"
         secondary
-        class="rounded-e-none border-[1px] border-r-0 border-surface-400"
+        class="rounded-e-none border-[1px] border-r-0 border-surface-400-500-token"
         on:click={() => ($selectedDate = $selectedDate.subtract(1, "day"))}
       />
       <DatePicker bind:date={$selectedDate} class="rounded-none border-x-surface-300" />
       <IconButton
         icon="eva:arrow-ios-forward-outline"
         secondary
-        class="rounded-s-none border-[1px] border-l-0 border-surface-400"
+        class="rounded-s-none border-[1px] border-l-0 border-surface-400-500-token"
         on:click={() => ($selectedDate = $selectedDate.add(1, "day"))}
       />
     </div>

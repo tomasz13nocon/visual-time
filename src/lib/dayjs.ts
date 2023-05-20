@@ -6,7 +6,7 @@ import timezone from "dayjs/plugin/timezone";
 
 dayjs.extend(customParseFormat);
 dayjs.extend(relativeTime);
-dayjs.extend(utc);
-dayjs.extend(timezone);
+// dayjs.extend(utc);
+// dayjs.extend(timezone);
 
 export default dayjs;

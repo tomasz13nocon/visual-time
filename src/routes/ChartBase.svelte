@@ -1,4 +1,6 @@
 <script>
+  import { selectedDateStart } from "$lib/stores";
+
   // Using masks and clip to do inner and outer strokes, so that task arcs fully cover the base
   import { fromDeg, rInner, rOuter } from "./chart";
 </script>
@@ -28,8 +30,8 @@
       <!-- hour text -->
       <text
         class="text-sm font-thin select-none"
-        x={fromDeg(i * 15).toPosX(rOuter + 30)}
-        y={fromDeg(i * 15).toPosY(rOuter + 30)}
+        x={fromDeg(i * 15, $selectedDateStart).toPosX(rOuter + 30)}
+        y={fromDeg(i * 15, $selectedDateStart).toPosY(rOuter + 30)}
         text-anchor="middle"
         dominant-baseline="middle"
       >

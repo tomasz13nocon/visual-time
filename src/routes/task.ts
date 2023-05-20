@@ -237,9 +237,9 @@ class Tracker {
 
   removeTask(task: Task) {
     this.tasks.update((tasks) =>
-      tasks.filter((t) => {
-        const task = get(t);
-        if (task === task) {
+      tasks.filter((taskStore) => {
+        const taskI = get(taskStore);
+        if (taskI === task) {
           if (task.active) {
             this.#stopTimer();
             this.activeTask = null;

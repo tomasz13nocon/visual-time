@@ -19,7 +19,7 @@ export function textColorOn(bgColor: string, lightColor: string, darkColor: stri
   return L > 0.179 ? darkColor : lightColor;
 }
 
-// Don't subscribe to selectedDate to prevent UI shift while fetching tasks
+// old: Don't subscribe to selectedDate to prevent UI shift while fetching tasks
 // Whenever selectedDate changes, all tasks will be updated anyway
 export function clampStart(ms: number) {
   return Math.max(ms, get(selectedDateStart).valueOf());

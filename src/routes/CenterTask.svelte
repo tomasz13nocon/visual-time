@@ -7,6 +7,8 @@
   import { clickOutside } from "$lib/clickOutside";
 
   export let task: Writable<Task>;
+  export let selected: boolean;
+  // TODO NOW visualize selection, maybe border
 
   let editingName = false;
   let editingColor = false;

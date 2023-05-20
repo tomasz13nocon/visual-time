@@ -9,6 +9,7 @@
   import { selectedDateStart } from "$lib/stores";
   import { getContext } from "svelte";
   import CenterTask from "./CenterTask.svelte";
+  import dayjs from "dayjs";
 
   let tasks = tracker.tasks;
   let hovered: Writable<Writable<Task> | null> = getContext("hovered");
@@ -68,6 +69,7 @@
         const start = fromPos(mousePos.x, mousePos.y, $selectedDateStart)
           .snapToGridOrTasks($tasks.map((taskStore) => get(taskStore)))
           .toMs();
+        console.log(dayjs(start).format("H:mm"));
         $taskDraft.startDate = start;
         $taskDraft.endDate = start;
         drawingPivot = start;
@@ -93,8 +95,12 @@
       }}
       on:click={(e) => {
         e.stopPropagation();
-        $hovered = task;
-        selected = true;
+        if (selected && $hovered === task) {
+          selected = false;
+        } else {
+          $hovered = task;
+          selected = true;
+        }
       }}
     />
   {/each}
@@ -103,7 +109,9 @@
   {#if mousePos && !drawing}
     <path
       d="M0 {-rInner} V {-rOuter}"
-      transform="rotate({fromPos(mousePos.x, mousePos.y).snapToGrid().toDeg()})"
+      transform="rotate({fromPos(mousePos.x, mousePos.y, $selectedDateStart)
+        .snapToGridOrTasks($tasks.map((taskStore) => get(taskStore)))
+        .toDeg()})"
       stroke-width="2"
       stroke={$taskDraft.color}
       class="pointer-events-none"
@@ -124,5 +132,5 @@
 </svg>
 
 {#if $hovered}
-  <CenterTask task={$hovered} />
+  <CenterTask task={$hovered} {selected} />
 {/if}
