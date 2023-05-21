@@ -13,6 +13,17 @@
   let to = "";
   let snapToLast = false;
   let showMoreColors = localStorageStore("showMoreColors", false);
+
+  function startTracking() {
+    if (snapToLast && $tasks.length) {
+      $taskDraft.startDate = get($tasks[0]).endDate;
+    } else {
+      $taskDraft.startDate = Date.now();
+    }
+
+    tracker.addTask($taskDraft, true);
+    $taskDraft = createTaskDraft($taskDraft);
+  }
 </script>
 
 <div class="p-2 flex flex-col gap-4">
@@ -23,22 +34,15 @@
         type="text"
         placeholder="What are you working on?"
         bind:value={$taskDraft.name}
+        on:keydown={(e) => {
+          if (e.key === "Enter") {
+            startTracking();
+          }
+        }}
       />
     </label>
 
-    <IconButton
-      icon="eva:arrow-right-fill"
-      on:click={() => {
-        if (snapToLast && $tasks.length) {
-          $taskDraft.startDate = get($tasks[0]).endDate;
-        } else {
-          $taskDraft.startDate = Date.now();
-        }
-
-        tracker.addTask($taskDraft, true);
-        $taskDraft = createTaskDraft($taskDraft);
-      }}
-    />
+    <IconButton icon="eva:arrow-right-fill" on:click={startTracking} />
 
     <IconButton
       icon="eva:plus-fill"

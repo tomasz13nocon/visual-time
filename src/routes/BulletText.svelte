@@ -14,7 +14,7 @@
   $: updateTitleBulletWidth(titleBulletEl);
 </script>
 
-<g class="pointer-events-none">
+<g class="pointer-events-none select-none">
   <rect
     x={x - titleBulletWidth / 2 - 10}
     y={y - 10}

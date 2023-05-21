@@ -1,7 +1,7 @@
 <script lang="ts">
   import DatePicker from "$lib/components/DatePicker.svelte";
   import TimeChart from "./TimeChart.svelte";
-  import { selectedDate, selectedDateStart } from "$lib/stores";
+  import { selectedDate } from "$lib/stores";
   import { Tab, TabGroup } from "@skeletonlabs/skeleton";
   import Controls from "./Controls.svelte";
   import IconButton from "$lib/components/IconButton.svelte";

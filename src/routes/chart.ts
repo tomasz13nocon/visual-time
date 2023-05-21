@@ -57,7 +57,7 @@ class TimePos {
     for (const task of tasks) {
       const startD = Math.abs(task.startDate - this.time);
       const endD = Math.abs(task.endDate - this.time);
-      if (startD < gridStep * 2 || endD < gridStep * 2) {
+      if (startD < gridStep * 1.2 || endD < gridStep * 1.2) {
         minD = startD < endD ? task.startDate : task.endDate;
       }
     }

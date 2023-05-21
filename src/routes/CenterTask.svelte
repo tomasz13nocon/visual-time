@@ -8,7 +8,6 @@
 
   export let task: Writable<Task>;
   export let selected: boolean;
-  // TODO NOW visualize selection, maybe border
 
   let editingName = false;
   let editingColor = false;
@@ -44,7 +43,7 @@
       autofocus
       bind:value={$task.name}
       bind:this={nameInput}
-      on:blur={commitNameEdit}
+      on:blur={cancelNameEdit}
       on:keydown={(e) => {
         if (e.key === "Escape") cancelNameEdit();
         if (e.key === "Enter") commitNameEdit();
@@ -63,7 +62,6 @@
       medium
       bind:element={colorEditButton}
       on:click={() => {
-        console.log("clicking color button");
         editingColor = !editingColor;
       }}
     />

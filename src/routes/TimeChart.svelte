@@ -7,27 +7,35 @@
   import HoverElements from "./HoverElements.svelte";
   import OverflowBullets from "./OverflowBullets.svelte";
   import { selectedDateStart } from "$lib/stores";
-  import { getContext } from "svelte";
+  import { getContext, onMount } from "svelte";
   import CenterTask from "./CenterTask.svelte";
-  import dayjs from "dayjs";
 
   let tasks = tracker.tasks;
   let hovered: Writable<Writable<Task> | null> = getContext("hovered");
   let selected = false;
   let svgEl: SVGSVGElement;
-  let mousePos: DOMPoint | null = null;
+  let mousePos: DOMPoint;
+  let pt: DOMPoint;
   let drawing = false;
   let drawingPivot = 0;
+  let baseHovered = false;
+  let resizingStart: Writable<Task> | null = null;
+  let resizingEnd: Writable<Task> | null = null;
+
+  onMount(() => {
+    // make sure it's always defined to avoid bugs
+    mousePos = new DOMPoint(0, 0);
+    pt = svgEl.createSVGPoint();
+  });
 
   tasks.subscribe(() => {
     $hovered = null;
     selected = false;
   });
 
-  $: if ($hovered === null) selected = false;
+  // $: if ($hovered === null) selected = false;
 
   function mouseMoved(e: MouseEvent) {
-    let pt = svgEl.createSVGPoint();
     pt.x = e.clientX;
     pt.y = e.clientY;
     mousePos = pt.matrixTransform(svgEl.getScreenCTM()!.inverse());
@@ -37,10 +45,48 @@
         .snapToGridOrTasks($tasks.map((taskStore) => get(taskStore)))
         .toMs();
       if (drawingPivot <= newValue) {
+        $taskDraft.startDate = drawingPivot;
         $taskDraft.endDate = newValue;
       }
       if (drawingPivot >= newValue) {
+        $taskDraft.endDate = drawingPivot;
         $taskDraft.startDate = newValue;
+      }
+    }
+    if (resizingStart) {
+      const newValue = fromPos(mousePos.x, mousePos.y, $selectedDateStart)
+        .snapToGridOrTasks($tasks.map((taskStore) => get(taskStore)))
+        .toMs();
+      if (newValue > $resizingStart.endDate) {
+        $resizingStart.startDate = $resizingStart.endDate;
+        $resizingStart.endDate = newValue;
+        resizingEnd = resizingStart;
+        resizingStart = null;
+      } else {
+        $resizingStart.startDate = newValue;
+      }
+    }
+    if (resizingEnd) {
+      const newValue = fromPos(mousePos.x, mousePos.y, $selectedDateStart)
+        .snapToGridOrTasks($tasks.map((taskStore) => get(taskStore)))
+        .toMs();
+      if (newValue < $resizingEnd.startDate) {
+        $resizingEnd.endDate = $resizingEnd.startDate;
+        $resizingEnd.startDate = newValue;
+        resizingStart = resizingEnd;
+        resizingEnd = null;
+      } else {
+        $resizingEnd.endDate = newValue;
+      }
+    }
+  }
+
+  function mouseUp() {
+    if (drawing) {
+      drawing = false;
+      if ($taskDraft.endDate - $taskDraft.startDate !== 0) {
+        tracker.addTask($taskDraft);
+        $taskDraft = createTaskDraft($taskDraft);
       }
     }
   }
@@ -54,32 +100,40 @@
   class="mx-auto fill-token"
   bind:this={svgEl}
   on:click={() => {
-    if (selected) {
+    if (resizingStart) {
+      if ($resizingStart.endDate - $resizingStart.startDate === 0) {
+        tracker.removeTask($resizingStart);
+      } else {
+        tracker.updateTask($resizingStart);
+      }
+      resizingStart = null;
+    } else if (resizingEnd) {
+      if ($resizingEnd.endDate - $resizingEnd.startDate === 0) {
+        tracker.removeTask($resizingEnd);
+      } else {
+        tracker.updateTask($resizingEnd);
+      }
+      resizingEnd = null;
+    } else if (selected) {
       selected = false;
       $hovered = null;
     }
   }}
+  on:mousemove={mouseMoved}
+  on:mouseup={mouseUp}
 >
   <ChartBase
-    on:mousemove={mouseMoved}
-    on:mouseleave={() => (mousePos = null)}
+    on:mouseenter={() => (baseHovered = true)}
+    on:mouseleave={() => (baseHovered = false)}
     on:mousedown={() => {
       drawing = true;
       if (mousePos) {
         const start = fromPos(mousePos.x, mousePos.y, $selectedDateStart)
           .snapToGridOrTasks($tasks.map((taskStore) => get(taskStore)))
           .toMs();
-        console.log(dayjs(start).format("H:mm"));
         $taskDraft.startDate = start;
         $taskDraft.endDate = start;
         drawingPivot = start;
-      }
-    }}
-    on:mouseup={() => {
-      drawing = false;
-      if ($taskDraft.endDate - $taskDraft.startDate !== 0) {
-        tracker.addTask($taskDraft);
-        $taskDraft = createTaskDraft($taskDraft);
       }
     }}
   />
@@ -106,7 +160,7 @@
   {/each}
 
   <!-- line "cursor" -->
-  {#if mousePos && !drawing}
+  {#if baseHovered && !drawing && !resizingStart && !resizingEnd}
     <path
       d="M0 {-rInner} V {-rOuter}"
       transform="rotate({fromPos(mousePos.x, mousePos.y, $selectedDateStart)
@@ -123,7 +177,7 @@
   {/if}
 
   {#if $hovered}
-    <HoverElements task={$hovered} {selected} />
+    <HoverElements task={$hovered} {selected} {mousePos} bind:resizingStart bind:resizingEnd />
   {/if}
 
   {#each $tasks as task}
