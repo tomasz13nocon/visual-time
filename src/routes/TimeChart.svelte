@@ -6,13 +6,14 @@
   import { get, type Writable } from "svelte/store";
   import HoverElements from "./HoverElements.svelte";
   import OverflowBullets from "./OverflowBullets.svelte";
-  import { selectedDateStart } from "$lib/stores";
+  import { selectedDate, selectedDateStart } from "$lib/stores";
   import { getContext, onMount } from "svelte";
   import CenterTask from "./CenterTask.svelte";
+  import TaskTimes from "./TaskTimes.svelte";
 
   let tasks = tracker.tasks;
   let hovered: Writable<Writable<Task> | null> = getContext("hovered");
-  let selected = false;
+  let selected: Writable<boolean> = getContext("selected");
   let svgEl: SVGSVGElement;
   let mousePos: DOMPoint;
   let pt: DOMPoint;
@@ -30,7 +31,7 @@
 
   tasks.subscribe(() => {
     $hovered = null;
-    selected = false;
+    $selected = false;
   });
 
   // $: if ($hovered === null) selected = false;
@@ -114,8 +115,8 @@
         tracker.updateTask($resizingEnd);
       }
       resizingEnd = null;
-    } else if (selected) {
-      selected = false;
+    } else if ($selected) {
+      $selected = false;
       $hovered = null;
     }
   }}
@@ -138,24 +139,25 @@
     }}
   />
 
-  {#each [...$tasks].reverse() as task}
+  {#each [...$tasks].reverse() as task (task)}
     <TaskArc
       {task}
       on:mouseenter={() => {
-        if (!selected) $hovered = task;
+        if (!$selected) $hovered = task;
       }}
       on:mouseleave={() => {
-        if (!selected) $hovered = null;
+        if (!$selected) $hovered = null;
       }}
       on:click={(e) => {
         e.stopPropagation();
-        if (selected && $hovered === task) {
-          selected = false;
+        if ($selected && $hovered === task) {
+          $selected = false;
         } else {
           $hovered = task;
-          selected = true;
+          $selected = true;
         }
       }}
+      transition
     />
   {/each}
 
@@ -174,10 +176,11 @@
 
   {#if drawing}
     <TaskArc task={taskDraft} pointerEventsNone fat dashArray />
+    <TaskTimes task={taskDraft} />
   {/if}
 
   {#if $hovered}
-    <HoverElements task={$hovered} {selected} {mousePos} bind:resizingStart bind:resizingEnd />
+    <HoverElements task={$hovered} {mousePos} bind:resizingStart bind:resizingEnd />
   {/if}
 
   {#each $tasks as task}
@@ -186,5 +189,5 @@
 </svg>
 
 {#if $hovered}
-  <CenterTask task={$hovered} {selected} />
+  <CenterTask task={$hovered} />
 {/if}

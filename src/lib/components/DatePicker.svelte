@@ -22,7 +22,7 @@
 
 <input
   type="date"
-  class="input w-52 {$$props.class}"
+  class="input w-56 {$$props.class}"
   bind:value={dateStr}
   on:change={dateChanged}
 />

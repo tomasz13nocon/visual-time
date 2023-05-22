@@ -7,21 +7,65 @@
   import { get, type Writable } from "svelte/store";
   import { localStorageStore } from "@skeletonlabs/skeleton";
   import ColorButton from "./ColorButton.svelte";
+  import { blur, fly, scale, slide } from "svelte/transition";
+  import autoAnimate from "@formkit/auto-animate";
 
   let tasks = tracker.tasks;
   let from = "";
   let to = "";
   let snapToLast = false;
   let showMoreColors = localStorageStore("showMoreColors", false);
+  let addTaskError: {
+    start?: boolean;
+    end?: boolean;
+    msg?: string;
+  } = {};
+
+  function getSnappedTime() {
+    let now = Date.now();
+    if (snapToLast) {
+      for (let task of $tasks) {
+        let taskEnd = get(task).endDate;
+        if (taskEnd <= now) {
+          return taskEnd;
+        }
+      }
+    }
+    return now;
+  }
 
   function startTracking() {
-    if (snapToLast && $tasks.length) {
-      $taskDraft.startDate = get($tasks[0]).endDate;
-    } else {
-      $taskDraft.startDate = Date.now();
+    $taskDraft.startDate = getSnappedTime();
+    tracker.addTask($taskDraft, true);
+    $taskDraft = createTaskDraft($taskDraft);
+  }
+
+  function addTask() {
+    addTaskError = {};
+
+    const now = $selectedDate.format("YYYY-MM-DD") + "_";
+    const format = "YYYY-MM-DD_H:m";
+    $taskDraft.startDate = dayjs(now + from, format).valueOf();
+    $taskDraft.endDate = dayjs(now + to, format).valueOf();
+
+    if (isNaN($taskDraft.startDate)) {
+      addTaskError.start = true;
+      addTaskError.msg = "Invalid start time";
+    }
+    if (isNaN($taskDraft.endDate)) {
+      addTaskError.end = true;
+      addTaskError.msg = "Invalid end time";
+    }
+    if ($taskDraft.startDate >= $taskDraft.endDate) {
+      addTaskError.start = true;
+      addTaskError.end = true;
+      addTaskError.msg = "Start time must be before end time";
+    }
+    if (addTaskError.msg) {
+      return;
     }
 
-    tracker.addTask($taskDraft, true);
+    tracker.addTask($taskDraft);
     $taskDraft = createTaskDraft($taskDraft);
   }
 </script>
@@ -42,19 +86,9 @@
       />
     </label>
 
-    <IconButton icon="eva:arrow-right-fill" on:click={startTracking} />
+    <IconButton icon="eva:arrow-right-fill" on:click={startTracking} title="Start tracking" />
 
-    <IconButton
-      icon="eva:plus-fill"
-      on:click={() => {
-        const now = $selectedDate.format("YYYY-MM-DD") + "_";
-        const format = "YYYY-MM-DD_H:m";
-        $taskDraft.startDate = dayjs(now + from, format).valueOf();
-        $taskDraft.endDate = dayjs(now + to, format).valueOf();
-        tracker.addTask($taskDraft);
-        $taskDraft = createTaskDraft($taskDraft);
-      }}
-    />
+    <IconButton icon="eva:plus-fill" on:click={addTask} title="Add task entry" />
   </div>
 
   <label class="flex items-center space-x-2 w-fit">
@@ -62,9 +96,24 @@
     <p>Start tracking from the end of last task</p>
   </label>
 
+  {#if addTaskError.msg}
+    <div class="alert variant-ghost-error py-2 px-4" transition:slide={{ duration: 300 }}>
+      <div class="alert-message">
+        {addTaskError.msg}
+      </div>
+      <div class="alert-actions">
+        <IconButton small icon="eva:close-fill" on:click={() => (addTaskError = {})} />
+      </div>
+    </div>
+  {/if}
+
   <div class="flex gap-2">
-    <input class="input py-1" type="time" bind:value={from} />
-    <input class="input py-1" type="time" bind:value={to} />
+    <input
+      class="input py-1 {addTaskError.start ? 'input-error' : ''}"
+      type="time"
+      bind:value={from}
+    />
+    <input class="input py-1 {addTaskError.end ? 'input-error' : ''}" type="time" bind:value={to} />
   </div>
 
   <div>
@@ -100,9 +149,9 @@
     </button>
   </div>
 
-  <div class="flex flex-col gap-2">
-    {#each $tasks as task}
-      <TaskListing {task} />
+  <div use:autoAnimate class="flex flex-col gap-2">
+    {#each $tasks as task (task)}
+      <TaskListing {task} {getSnappedTime} />
     {/each}
   </div>
 </div>

@@ -50,26 +50,25 @@ export const defaultTaskNames = [
   "Eating pizza",
   "Writing script for my inevitable biopic",
   "Conquering Constantinople",
-  "Summoning the Kraken",
+  "Summoning Kraken",
   "Painting Mona Lisa",
   "Searching for Atlantis",
   "Proving P != NP",
   "Focusing intensely",
   "Crafting pickaxe",
-  "Unraveling the mystery of time",
+  "Unraveling mystery of time",
   "Ascending to another dimension",
-  "Taming my pet dragon",
+  "Playing with my pet donkey",
   "Building time machine",
-  "Solving the Riemann hypothesis",
+  "Solving Riemann hypothesis",
   "Building Dyson sphere",
   "Reading about trusses",
-
   "Delaying the crisis",
-  "Creative Chaos Creation",
-  "Diving into Knowledge Abyss",
 ];
 
 export type TaskColor = (typeof colors)[0];
+
+export const fetchError = writable("");
 
 export class Task {
   id = -1;
@@ -78,46 +77,66 @@ export class Task {
   startDate = 0;
   endDate = 0;
   active = false;
+  dontAnimate?: boolean;
 
   constructor(init?: Partial<Task>) {
     if (init) Object.assign(this, init);
   }
 
   async save(user: User | null) {
-    if (user) {
+    if (!user) {
+      // TODO local storage
+      return;
+    }
+
+    try {
       const resp = await authedFetch(user, `/api/tasks`, {
         method: "POST",
         body: JSON.stringify(this),
       });
-      return resp.json();
-    } else {
-      // TODO local storage
+      if (!resp.ok) throw new Error();
+      return await resp.json();
+    } catch (e) {
+      fetchError.set("Error: Could not save task. Please refresh the page and try again.");
+      return;
     }
   }
 
   async update(user: User | null) {
-    if (user) {
+    if (!user) {
+      // TODO local storage
+      return;
+    }
+
+    try {
       const resp = await authedFetch(user, `/api/tasks/${this.id}`, {
         method: "PUT",
         body: JSON.stringify(this),
       });
-    } else {
-      // TODO local storage
+      if (!resp.ok) throw new Error();
+    } catch (e) {
+      fetchError.set("Error: Could not update task. Please refresh the page and try again.");
+      return;
     }
   }
 
   async delete(user: User | null) {
-    if (user) {
+    if (!user) {
+      // TODO local storage
+      return;
+    }
+
+    try {
       const resp = await authedFetch(user, `/api/tasks/${this.id}`, {
         method: "DELETE",
       });
-    } else {
-      // TODO local storage
+      if (!resp.ok) throw new Error();
+    } catch (e) {
+      fetchError.set("Error: Could not delete task. Please refresh the page and try again.");
+      return;
     }
   }
 }
-
-// TODO add try catch everywhere
 
 async function authedFetch(user: User, input: RequestInfo | URL, init?: RequestInit) {
   const token = await user.getIdToken();
@@ -130,14 +149,21 @@ async function authedFetch(user: User, input: RequestInfo | URL, init?: RequestI
   });
 }
 
+/** Never rejects. On error sets fetchError store */
 async function fetchTasks(from: Dayjs, to: Dayjs, user: User | null) {
   if (!user) {
     // TODO local storage
     return [];
   }
-  const resp = await authedFetch(user, `/api/tasks?from=${from.valueOf()}&to=${to.valueOf()}`);
-  const json = await resp.json();
-  return json;
+
+  try {
+    const resp = await authedFetch(user, `/api/tasks?from=${from.valueOf()}&to=${to.valueOf()}`);
+    if (!resp.ok) throw new Error();
+    return await resp.json();
+  } catch (e) {
+    fetchError.set("Error: Could not fetch tasks");
+  }
+  return [];
 }
 
 // TODO subscribe to user and store in private field

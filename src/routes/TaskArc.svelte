@@ -3,6 +3,8 @@
   import { fromMs, rInner, rOuter } from "./chart";
   import type { Writable } from "svelte/store";
   import { clampEnd, clampStart } from "$lib/util";
+  import { scale } from "svelte/transition";
+  import { selectedDate } from "$lib/stores";
 
   export let task: Writable<Task>;
   export let outline = false;
@@ -10,6 +12,13 @@
   export let pointerEventsNone = false;
   export let dashArray = false;
   export let fatter = false;
+  export let transition = false;
+
+  // When a task overlaps midnight, and we change selected date
+  // we get 2 tasks with teh same id despite being different entities for the purposes of rendering
+  // causing transitions to not work.
+  // That's why we "salt" html IDs with the selected date at the time of first render (not reactive on purpose)
+  let displayedInDate = $selectedDate;
 
   $: startT = fromMs(clampStart($task.startDate));
   $: endT = fromMs(clampEnd($task.endDate));
@@ -19,21 +28,21 @@
 
 <defs>
   <path
-    id="task-path-{$task.id}"
+    id="task-path-{$task.id + displayedInDate.valueOf()}"
     d="M {startT.toPosStr(rOuter)}
     A {rOuter} {rOuter} 0 {largeArc} 1 {endT.toPosStr(rOuter)}
     L {endT.toPosStr(rInner)}
     A {rInner} {rInner} 0 {largeArc} 0 {startT.toPosStr(rInner)} Z"
   />
-  <clipPath id="task-clip-{$task.id}">
-    <use href="#task-path-{$task.id}" />
+  <clipPath id="task-clip-{$task.id + displayedInDate.valueOf()}">
+    <use href="#task-path-{$task.id + displayedInDate.valueOf()}" />
   </clipPath>
 </defs>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <use
-  href="#task-path-{$task.id}"
-  clip-path={short ? "" : `url(#task-clip-${$task.id})`}
+  href="#task-path-{$task.id + displayedInDate.valueOf()}"
+  clip-path={short ? "" : `url(#task-clip-${$task.id + displayedInDate.valueOf()})`}
   stroke={$task.color}
   stroke-width={fatter ? 6 : fat && !short ? 4 : 2}
   stroke-dasharray={dashArray ? "4 4" : ""}
@@ -43,4 +52,5 @@
   on:mouseenter
   on:mouseleave
   on:click
+  transition:scale={{ duration: transition ? 350 : 0 }}
 />

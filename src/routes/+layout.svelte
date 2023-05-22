@@ -2,13 +2,14 @@
   import "@skeletonlabs/skeleton/themes/theme-crimson.css";
   import "@skeletonlabs/skeleton/styles/all.css";
   import "../app.postcss";
-  import { AppShell, AppBar, LightSwitch } from "@skeletonlabs/skeleton";
+  import { AppShell, AppBar, LightSwitch, Toast, toastStore } from "@skeletonlabs/skeleton";
   import { onAuthStateChanged, signOut as _signOut } from "firebase/auth";
   import { onMount } from "svelte";
   import { auth } from "$lib/auth";
   import { user } from "$lib/stores";
   import { identicon } from "minidenticons";
   import { clickOutside } from "$lib/clickOutside";
+  import { fetchError } from "./task";
 
   onMount(() => {
     onAuthStateChanged(auth, (userData) => {
@@ -23,6 +24,17 @@
 
   let showDropdown = false;
   let profileBtn: HTMLButtonElement;
+
+  fetchError.subscribe((err) => {
+    if (err) {
+      toastStore.trigger({
+        message: err,
+        background: "variant-filled-error",
+        autohide: false,
+      });
+      fetchError.set("");
+    }
+  });
 </script>
 
 <AppShell slotPageContent="h-full w-full">
@@ -39,7 +51,7 @@
             bind:this={profileBtn}
             class="btn-icon w-10 p-1 -my-1 !ml-8 block variant-outline-primary rounded-full cursor-pointer"
           >
-            <img src="data:image/svg+xml;utf8,{identicon($user.uid)}" alt="generated avatar" />
+            <img src="data:image/svg+xml;utf8,{identicon($user.uid)}" alt="Your generated avatar" />
           </button>
           {#if showDropdown}
             <ul
@@ -61,3 +73,5 @@
   </svelte:fragment>
   <slot />
 </AppShell>
+
+<Toast position="br" />

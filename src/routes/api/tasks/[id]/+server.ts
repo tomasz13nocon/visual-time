@@ -2,7 +2,7 @@ import { authorize } from "$lib/server/controller";
 import db from "$lib/server/db";
 import type { RequestHandler } from "./$types";
 
-export const PUT = (async ({ request, url, params }) => {
+export const PUT = (async ({ request, params }) => {
   const { user_id, errResp } = await authorize(request);
   if (errResp) return errResp;
 
@@ -34,7 +34,7 @@ export const PUT = (async ({ request, url, params }) => {
   return new Response(JSON.stringify(result.rows));
 }) satisfies RequestHandler;
 
-export const DELETE = (async ({ request, url, params }) => {
+export const DELETE = (async ({ request, params }) => {
   const { user_id, errResp } = await authorize(request);
   if (errResp) return errResp;
 

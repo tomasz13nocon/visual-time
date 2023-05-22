@@ -7,7 +7,6 @@
   import { clickOutside } from "$lib/clickOutside";
 
   export let task: Writable<Task>;
-  export let selected: boolean;
 
   let editingName = false;
   let editingColor = false;
@@ -56,7 +55,7 @@
   {/if}
 
   <div class="flex gap-1 justify-center mb-4 mt-1">
-    <IconButton icon="eva:edit-fill" medium on:click={startEditingName} />
+    <IconButton icon="eva:edit-fill" medium on:click={startEditingName} title="Change name" />
     <IconButton
       icon="eva:color-palette-fill"
       medium
@@ -64,8 +63,14 @@
       on:click={() => {
         editingColor = !editingColor;
       }}
+      title="Change color"
     />
-    <IconButton icon="eva:trash-2-outline" medium on:click={() => tracker.removeTask($task)} />
+    <IconButton
+      icon="eva:trash-2-outline"
+      medium
+      on:click={() => tracker.removeTask($task)}
+      title="Remove task entry"
+    />
     {#if editingColor}
       <div
         class="absolute grid grid-cols-[repeat(8,2rem)] gap-1 top-20 card p-2"

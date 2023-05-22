@@ -12,10 +12,10 @@
   $: clampedStart = clampStart($task.startDate);
   $: clampedEnd = clampEnd($task.endDate);
   $: diffDaysMinus = Math.abs(
-    dayjs(get(selectedDate)).startOf("day").diff(dayjs($task.startDate).startOf("day"), "day")
+    get(selectedDate).startOf("day").diff(dayjs($task.startDate).startOf("day"), "day")
   );
   $: diffDaysPlus = Math.abs(
-    dayjs(get(selectedDate)).startOf("day").diff(dayjs($task.endDate).startOf("day"), "day")
+    get(selectedDate).startOf("day").diff(dayjs($task.endDate).startOf("day"), "day")
   );
 </script>
 

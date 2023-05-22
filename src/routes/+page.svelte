@@ -11,10 +11,11 @@
 
   let tabSet = 0;
   let hovered: Writable<Writable<Task> | null> = setContext("hovered", writable(null));
+  let selected: Writable<boolean> = setContext("selected", writable(false));
 </script>
 
 <div class="flex w-full h-full">
-  <aside class="w-96 shrink-0 border-r-2 border-surface-700 h-full overflow-y-scroll">
+  <aside class="w-96 shrink-0 border-r-2 border-surface-700 h-full overflow-y-auto">
     <TabGroup justify="justify-center">
       <Tab bind:group={tabSet} name="tab1" value={0}>
         <div class="text-2xl">Tracker</div>
@@ -39,6 +40,7 @@
         secondary
         class="rounded-e-none border-[1px] border-r-0 border-surface-400-500-token"
         on:click={() => ($selectedDate = $selectedDate.subtract(1, "day"))}
+        title="Previous day"
       />
       <DatePicker bind:date={$selectedDate} class="rounded-none border-x-surface-300" />
       <IconButton
@@ -46,6 +48,7 @@
         secondary
         class="rounded-s-none border-[1px] border-l-0 border-surface-400-500-token"
         on:click={() => ($selectedDate = $selectedDate.add(1, "day"))}
+        title="Next day"
       />
     </div>
 

@@ -5,6 +5,7 @@
   export let medium = false;
   export let icon: string;
   export let element: HTMLButtonElement | undefined = undefined;
+  export let title: string | undefined = undefined;
 
   const textSize = small ? "text-lg" : medium ? "text-xl" : "text-4xl";
 </script>
@@ -17,6 +18,7 @@
   {$$props.class}"
   on:click
   bind:this={element}
+  {title}
 >
   <Icon {icon} />
 </button>
