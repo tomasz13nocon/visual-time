@@ -8,3 +8,4 @@ export const selectedDateStart = derived(selectedDate, (date) => date.startOf("d
 export const selectedDateEnd = derived(selectedDate, (date) => date.endOf("day"));
 export const user: Writable<User | null> = writable(null);
 export const fetchingTasks = writable(false);
+export const overflowBulletCount = writable(0);

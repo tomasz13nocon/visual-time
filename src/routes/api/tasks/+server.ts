@@ -8,17 +8,17 @@ export const GET = (async ({ request, url }) => {
 
   const from = url.searchParams.get("from");
   const to = url.searchParams.get("to");
-  let query =
-    'SELECT user_id as "userId", id, name, color, start_date as "startDate", end_date as "endDate", active FROM tasks WHERE user_id = $1';
-  if (from) {
-    query += " AND end_date >= $2";
-    // from = parseInt(from);
-  }
-  if (to) {
-    query += " AND start_date <= $3";
-    // to = parseInt(to);
-  }
+  const includeActive = url.searchParams.get("includeActive") === "true";
+  // TODO validate from and to
+
+  let query = `SELECT user_id as "userId", id, name, color, start_date as "startDate", end_date as "endDate", active
+FROM tasks
+WHERE user_id = $1`;
+  if (from) query += " AND end_date >= $2";
+  if (to) query += " AND start_date <= $3";
+  if (includeActive) query += " OR user_id = $1 AND active = true";
   query += " ORDER BY start_date DESC";
+
   const result = await db.query(query, [user_id, from, to]);
 
   return new Response(JSON.stringify(result.rows));

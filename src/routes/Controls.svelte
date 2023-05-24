@@ -20,6 +20,7 @@
     end?: boolean;
     msg?: string;
   } = {};
+  let taskNames = [];
 
   function getSnappedTime() {
     let now = Date.now();
@@ -96,24 +97,29 @@
     <p>Start tracking from the end of last task</p>
   </label>
 
-  {#if addTaskError.msg}
-    <div class="alert variant-ghost-error py-2 px-4" transition:slide={{ duration: 300 }}>
-      <div class="alert-message">
-        {addTaskError.msg}
+  <div>
+    {#if addTaskError.msg}
+      <div class="alert variant-ghost-error py-2 px-4 mb-2" transition:slide={{ duration: 300 }}>
+        <div class="alert-message">
+          {addTaskError.msg}
+        </div>
+        <div class="alert-actions">
+          <IconButton small icon="eva:close-fill" on:click={() => (addTaskError = {})} />
+        </div>
       </div>
-      <div class="alert-actions">
-        <IconButton small icon="eva:close-fill" on:click={() => (addTaskError = {})} />
-      </div>
+    {/if}
+    <div class="flex gap-2">
+      <input
+        class="input py-1 {addTaskError.start ? 'input-error' : ''}"
+        type="time"
+        bind:value={from}
+      />
+      <input
+        class="input py-1 {addTaskError.end ? 'input-error' : ''}"
+        type="time"
+        bind:value={to}
+      />
     </div>
-  {/if}
-
-  <div class="flex gap-2">
-    <input
-      class="input py-1 {addTaskError.start ? 'input-error' : ''}"
-      type="time"
-      bind:value={from}
-    />
-    <input class="input py-1 {addTaskError.end ? 'input-error' : ''}" type="time" bind:value={to} />
   </div>
 
   <div>

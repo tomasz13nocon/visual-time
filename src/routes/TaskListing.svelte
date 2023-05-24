@@ -2,8 +2,9 @@
   import { tracker, Task } from "./task";
   import IconButton from "$lib/components/IconButton.svelte";
   import dayjs from "$lib/dayjs";
-  import type { Writable } from "svelte/store";
+  import { get, type Writable } from "svelte/store";
   import { getContext } from "svelte";
+  import { selectedDate } from "$lib/stores";
 
   export let task: Writable<Task>;
   export let getSnappedTime: () => number;
@@ -15,8 +16,12 @@
 </script>
 
 <div
-  class="-mx-2 -my-1 px-2 py-1 {$hovered === task
-    ? 'bg-tertiary-400 dark:bg-secondary-900/75'
+  class="-mx-2 -my-1 px-2 py-1
+  {$hovered === task ? 'bg-tertiary-400 dark:bg-secondary-900/75' : ''}
+  {$task.active &&
+  !dayjs($task.startDate).isSame(get(selectedDate), 'day') &&
+  !dayjs($task.endDate).isSame(get(selectedDate), 'day')
+    ? 'drop-shadow-lg border-b-2 border-primary-400 dark:border-primary-600 mb-2'
     : ''}"
   on:mouseenter={() => {
     if (!$selected) $hovered = task;

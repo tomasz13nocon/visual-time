@@ -2,7 +2,6 @@ import { derived, get, writable, type Writable } from "svelte/store";
 import { fetchingTasks, selectedDate, selectedDateEnd, selectedDateStart, user } from "$lib/stores";
 import type { Dayjs } from "dayjs";
 import type { User } from "firebase/auth";
-import dayjs from "dayjs";
 
 // prettier-ignore
 export const colors = [
@@ -33,7 +32,6 @@ export const colorsLight = [
   "#A17CF7",
   "#D46CF7",
   "#A3A3A3",
-
   "#A74843",
   "#B7895F",
   "#D4D46C",
@@ -71,19 +69,20 @@ export type TaskColor = (typeof colors)[0];
 export const fetchError = writable("");
 
 export class Task {
-  id = -1;
+  // in case of errors/or slow network + race conditions
+  // we can have multiple unpersisted tasks, so we need to have a unique local id
+  id = Math.random();
   name = "";
   color = colors[4];
   startDate = 0;
   endDate = 0;
   active = false;
-  dontAnimate?: boolean;
 
   constructor(init?: Partial<Task>) {
     if (init) Object.assign(this, init);
   }
 
-  async save(user: User | null) {
+  async save(user: User | null): Promise<Task | undefined> {
     if (!user) {
       // TODO local storage
       return;
@@ -98,11 +97,10 @@ export class Task {
       return await resp.json();
     } catch (e) {
       fetchError.set("Error: Could not save task. Please refresh the page and try again.");
-      return;
     }
   }
 
-  async update(user: User | null) {
+  async update(user: User | null): Promise<void> {
     if (!user) {
       // TODO local storage
       return;
@@ -116,11 +114,10 @@ export class Task {
       if (!resp.ok) throw new Error();
     } catch (e) {
       fetchError.set("Error: Could not update task. Please refresh the page and try again.");
-      return;
     }
   }
 
-  async delete(user: User | null) {
+  async delete(user: User | null): Promise<void> {
     if (!user) {
       // TODO local storage
       return;
@@ -133,12 +130,15 @@ export class Task {
       if (!resp.ok) throw new Error();
     } catch (e) {
       fetchError.set("Error: Could not delete task. Please refresh the page and try again.");
-      return;
     }
   }
 }
 
-async function authedFetch(user: User, input: RequestInfo | URL, init?: RequestInit) {
+async function authedFetch(
+  user: User,
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
   const token = await user.getIdToken();
   return fetch(input, {
     ...init,
@@ -150,20 +150,53 @@ async function authedFetch(user: User, input: RequestInfo | URL, init?: RequestI
 }
 
 /** Never rejects. On error sets fetchError store */
-async function fetchTasks(from: Dayjs, to: Dayjs, user: User | null) {
+async function fetchTasks(from: Dayjs, to: Dayjs, user: User | null): Promise<Task[]> {
   if (!user) {
     // TODO local storage
     return [];
   }
 
   try {
-    const resp = await authedFetch(user, `/api/tasks?from=${from.valueOf()}&to=${to.valueOf()}`);
+    const resp = await authedFetch(
+      user,
+      `/api/tasks?from=${from.valueOf()}&to=${to.valueOf()}&includeActive=true`
+    );
     if (!resp.ok) throw new Error();
     return await resp.json();
   } catch (e) {
     fetchError.set("Error: Could not fetch tasks");
   }
   return [];
+}
+
+async function fetchActive(user: User | null): Promise<Task | undefined | null> {
+  if (!user) {
+    // TODO local storage
+    return;
+  }
+
+  try {
+    const resp = await authedFetch(user, `/api/tasks/active`);
+    if (!resp.ok) throw new Error();
+    return await resp.json();
+  } catch (e) {
+    fetchError.set("Error: Could not fetch tasks");
+  }
+}
+
+export async function fetchTaskNames(user: User | null) {
+  if (!user) {
+    // TODO local storage
+    return;
+  }
+
+  try {
+    const resp = await authedFetch(user, `/api/tasks/templates`);
+    if (!resp.ok) throw new Error();
+    return await resp.json();
+  } catch (e) {
+    fetchError.set("Error: Could not fetch task names");
+  }
 }
 
 // TODO subscribe to user and store in private field
@@ -175,19 +208,21 @@ class Tracker {
   constructor() {
     derived([selectedDateStart, selectedDateEnd, user], (stores) => stores).subscribe(
       ([selectedDateStart, selectedDateEnd, user]) => {
+        this.#stopTimer();
+        this.tasks.set([]);
+        this.activeTask = null;
         fetchingTasks.set(true);
-        fetchTasks(selectedDateStart, selectedDateEnd, user).then((tasks: Task[]) => {
+        fetchTasks(selectedDateStart, selectedDateEnd, user).then((apiTasks) => {
           // If what we're fetching doesn't contain the active task then we won't know about it,
           // and activeTask will be null even though it exists in the DB.
           // Generally at first load we always fetch current day, and active tasks can only be in current day, so should be fine.
           this.tasks.set(
-            tasks.map((apiTask: Task) => {
+            apiTasks.map((apiTask) => {
               const task = new Task(apiTask);
               const taskStore = writable(task);
               if (task.active) {
                 task.endDate = Date.now(); // To reduce delay of waiting for first interval
                 this.activeTask = taskStore;
-                this.#stopTimer();
                 this.#startTimer();
               }
               return taskStore;
@@ -201,12 +236,14 @@ class Tracker {
 
   #startTimer() {
     this.#intervalId = setInterval(() => {
-      // console.log("tick");
-      // TODO if null cancel interval?
-      this.activeTask?.update((task) => {
-        task!.endDate = Date.now();
-        return task;
-      });
+      if (this.activeTask) {
+        this.activeTask.update((task) => {
+          task.endDate = Date.now();
+          return task;
+        });
+      } else {
+        this.#stopTimer();
+      }
     }, 1000);
   }
 
@@ -214,44 +251,47 @@ class Tracker {
     if (this.#intervalId) clearInterval(this.#intervalId);
   }
 
+  #insertIntoTasks(task: Writable<Task>) {
+    this.tasks.update((tasks) => {
+      const index = tasks.findIndex((t) => get(t).startDate < get(task).startDate);
+      tasks.splice(index === -1 ? tasks.length : index, 0, task);
+      return tasks;
+    });
+  }
+
   stop() {
     this.#stopTimer();
-    if (this.activeTask) {
-      this.activeTask.update((task) => {
-        task.active = false;
-        task.update(get(user));
-        return task;
-      });
-    }
+    this.activeTask?.update((task) => {
+      task.active = false;
+      task.update(get(user));
+      return task;
+    });
     this.activeTask = null;
   }
 
   addTask(task: Task, startTracking = false) {
-    if (task.name === "")
-      task.name = defaultTaskNames[Math.floor(Math.random() * defaultTaskNames.length)];
+    task.name = task.name || defaultTaskNames[Math.floor(Math.random() * defaultTaskNames.length)];
+
+    const taskStore = writable(task);
 
     if (startTracking) {
       this.stop();
       task.endDate = Date.now();
       task.active = true;
       this.#startTimer();
+      this.activeTask = taskStore;
     }
-
-    const newTask = writable(task);
-
-    if (startTracking) this.activeTask = newTask;
-
-    if (get(selectedDate).isSame(task.startDate, "day")) {
-      this.tasks.update((tasks) => {
-        const index = tasks.findIndex((t) => get(t).startDate < task.startDate);
-        tasks.splice(index === -1 ? tasks.length : index, 0, newTask);
-        return tasks;
-      });
+    // Only add to tasks if it overlaps selected date
+    if (
+      task.startDate < get(selectedDateEnd).valueOf() ||
+      task.endDate > get(selectedDateStart).valueOf()
+    ) {
+      this.#insertIntoTasks(taskStore);
     }
 
     task.save(get(user)).then((savedTask) => {
-      newTask.update((t) => {
-        t.id = savedTask.id;
+      taskStore.update((t) => {
+        t.id = savedTask?.id ?? Math.random(); // TODO: localStorage IDs, and also handle errors
         return t;
       });
     });
@@ -262,20 +302,12 @@ class Tracker {
   }
 
   removeTask(task: Task) {
-    this.tasks.update((tasks) =>
-      tasks.filter((taskStore) => {
-        const taskI = get(taskStore);
-        if (taskI === task) {
-          if (task.active) {
-            this.#stopTimer();
-            this.activeTask = null;
-          }
-          task.delete(get(user));
-          return false;
-        }
-        return true;
-      })
-    );
+    if (task.active) {
+      this.#stopTimer();
+      this.activeTask = null;
+    }
+    this.tasks.update((tasks) => tasks.filter((taskStore) => get(taskStore) !== task));
+    task.delete(get(user));
   }
 }
 

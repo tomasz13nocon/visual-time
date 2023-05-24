@@ -1,39 +1,27 @@
 <script lang="ts">
-  import { get, type Writable } from "svelte/store";
-  import { type Task, colors, colorsLight } from "./task";
+  import type { Writable } from "svelte/store";
+  import type { Task } from "./task";
   import { clampEnd, clampStart } from "$lib/util";
-  import BulletText from "./BulletText.svelte";
-  import { fromMs, rInner } from "./chart";
   import dayjs from "$lib/dayjs";
-  import { selectedDate } from "$lib/stores";
+  import { selectedDate, selectedDateEnd, selectedDateStart } from "$lib/stores";
+  import OverflowBullet from "./OverflowBullet.svelte";
 
   export let task: Writable<Task>;
 
-  $: clampedStart = clampStart($task.startDate);
-  $: clampedEnd = clampEnd($task.endDate);
-  $: diffDaysMinus = Math.abs(
-    get(selectedDate).startOf("day").diff(dayjs($task.startDate).startOf("day"), "day")
-  );
-  $: diffDaysPlus = Math.abs(
-    get(selectedDate).startOf("day").diff(dayjs($task.endDate).startOf("day"), "day")
-  );
+  // $: clampedStart = clampStart($task.startDate);
+  // $: clampedEnd = clampEnd($task.endDate);
 </script>
 
-{#if clampedStart !== $task.startDate}
-  <BulletText
-    x={fromMs(clampedStart).toPosX(rInner)}
-    y={fromMs(clampedStart).toPosY(rInner)}
-    color={colorsLight[colors.indexOf($task.color)] ?? $task.color}
-  >
-    -{diffDaysMinus}d
-  </BulletText>
+<!-- {#if dayjs($task.startDate).isSame($selectedDate, "day") || dayjs($task.endDate).isSame($selectedDate, "day")} -->
+<!-- {#if clampedStart !== $task.startDate} -->
+{#if $task.startDate < $selectedDateStart.valueOf()}
+  <!-- TODO pass number, not task, to aboid rerenders -->
+  <OverflowBullet negative {task} />
 {/if}
-{#if clampedEnd !== $task.endDate}
-  <BulletText
-    x={fromMs(clampedEnd).toPosX(rInner)}
-    y={fromMs(clampedEnd).toPosY(rInner)}
-    color={colorsLight[colors.indexOf($task.color)] ?? $task.color}
-  >
-    +{diffDaysPlus}d
-  </BulletText>
+<!-- {/if} -->
+<!-- {#if clampedEnd !== $task.endDate} -->
+{#if $task.endDate > $selectedDateEnd.valueOf()}
+  <OverflowBullet {task} />
 {/if}
+<!-- {/if} -->
+<!-- {/if} -->
