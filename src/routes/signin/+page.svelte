@@ -1,7 +1,12 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
   import { auth } from "$lib/auth";
-  import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+  import {
+    GoogleAuthProvider,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signInWithPopup,
+  } from "firebase/auth";
   import { FirebaseError } from "firebase/app";
   import { goto } from "$app/navigation";
 
@@ -10,6 +15,8 @@
   let password = "";
   let error = "";
   let passwordError = "";
+
+  const googleProvider = new GoogleAuthProvider();
 
   async function signup() {
     validatePassword();
@@ -41,11 +48,20 @@
     } catch (e) {
       if (e instanceof FirebaseError) {
         if (e.code === "") {
-          error = ""; // TODO
+          error = "Oops! Something went wrong."; // TODO
         }
       } else {
         error = "Oops! Something went wrong.";
       }
+    }
+  }
+
+  async function signinGoogle() {
+    try {
+      await signInWithPopup(auth, googleProvider);
+      goto("/");
+    } catch (e) {
+      error = "Oops! Something went wrong.";
     }
   }
 
@@ -56,22 +72,9 @@
       passwordError = "";
     }
   }
-
-  async function test() {
-    const token = await auth.currentUser?.getIdToken();
-    if (!token) return;
-    let resp = await fetch("/api/tasks", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    console.log(resp);
-  }
 </script>
 
 <section class="flex flex-col w-96 mx-auto my-16 gap-4">
-  <button class="btn variant-filled-primary" on:click={test}> TEST </button>
   <h1>
     {#if creatingAcc}
       Create account
@@ -80,7 +83,13 @@
     {/if}
   </h1>
 
-  <form class="flex flex-col my-8 gap-4">
+  <button class="btn variant-filled-primary mt-4" on:click={signinGoogle}>
+    Sign in with Google <Icon icon="eva:google-fill" width="30" class="ml-4" />
+  </button>
+
+  <div class="text-center">or use email and password:</div>
+
+  <form class="flex flex-col my-4 gap-4">
     {#if error}
       <div class="alert variant-filled-error">
         <Icon icon="eva:alert-circle-fill" width="24" />
@@ -108,7 +117,7 @@
         <div class="text-error-700-200-token">{passwordError}</div>
       {/if}
     </label>
-    <button class="btn variant-filled-primary" on:click={creatingAcc ? signup : signin}>
+    <button class="btn variant-ghost-primary" on:click={creatingAcc ? signup : signin}>
       {#if creatingAcc}
         Create account
       {:else}
@@ -117,22 +126,14 @@
     </button>
   </form>
 
-  <button class="text-secondary-800-100-token" on:click={() => (creatingAcc = !creatingAcc)}>
+  <button
+    class="text-secondary-800-100-token hover:underline"
+    on:click={() => (creatingAcc = !creatingAcc)}
+  >
     {#if creatingAcc}
       Already have an account? Sign in
     {:else}
-      Create account
+      Don't have an account?
     {/if}
   </button>
 </section>
-
-<button
-  class="btn variant-filled-primary"
-  on:click={() => {
-    email = "tomasz13nocon@gmail.com";
-    password = "qweasd";
-    signin();
-  }}
->
-  CLICK
-</button>

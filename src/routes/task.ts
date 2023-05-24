@@ -219,7 +219,9 @@ class Tracker {
       ([selectedDateStart, selectedDateEnd, user]) => {
         // this.#stopTimer();
         this.tasks.set([]);
-        // this.activeTask.set(null);
+        if (!user) {
+          this.activeTask.set(null);
+        }
         fetchingTasks.set(true);
         fetchTasks(selectedDateStart, selectedDateEnd, user).then((apiTasks) => {
           // If what we're fetching doesn't contain the active task then we won't know about it,
@@ -296,7 +298,7 @@ class Tracker {
     }
     // Only add to tasks if it overlaps selected date
     if (
-      task.startDate < get(selectedDateEnd).valueOf() ||
+      task.startDate < get(selectedDateEnd).valueOf() &&
       task.endDate > get(selectedDateStart).valueOf()
     ) {
       this.#insertIntoTasks(taskStore);
