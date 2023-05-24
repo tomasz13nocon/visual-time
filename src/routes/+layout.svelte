@@ -41,7 +41,7 @@
   <svelte:fragment slot="header">
     <AppBar>
       <svelte:fragment slot="lead">
-        <a href="/" class="text-lg uppercase tracking-wider">track<strong>every</strong>.thing</a>
+        <a href="/" class="text-lg uppercase tracking-wider">visual<strong>ti.me</strong></a>
       </svelte:fragment>
       <svelte:fragment slot="trail">
         <LightSwitch />

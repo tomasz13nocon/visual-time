@@ -10,7 +10,7 @@
   import { blur, fly, scale, slide } from "svelte/transition";
   import autoAnimate from "@formkit/auto-animate";
 
-  let tasks = tracker.tasks;
+  const { inactiveTasks, activeTask } = tracker;
   let from = "";
   let to = "";
   let snapToLast = false;
@@ -25,7 +25,7 @@
   function getSnappedTime() {
     let now = Date.now();
     if (snapToLast) {
-      for (let task of $tasks) {
+      for (let task of $inactiveTasks) {
         let taskEnd = get(task).endDate;
         if (taskEnd <= now) {
           return taskEnd;
@@ -155,8 +155,13 @@
     </button>
   </div>
 
+  {#if $activeTask}
+    <div class="flex flex-col gap-2">
+      <TaskListing task={$activeTask} {getSnappedTime} />
+    </div>
+  {/if}
   <div use:autoAnimate class="flex flex-col gap-2">
-    {#each $tasks as task (task)}
+    {#each $inactiveTasks as task (task)}
       <TaskListing {task} {getSnappedTime} />
     {/each}
   </div>

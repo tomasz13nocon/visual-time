@@ -40,20 +40,20 @@
   </clipPath>
 </defs>
 
-{#if dayjs($task.startDate).isSame($selectedDate, "day") || dayjs($task.endDate).isSame($selectedDate, "day")}
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <use
-    href="#task-path-{$task.id + displayedInDate.valueOf()}"
-    clip-path={short ? "" : `url(#task-clip-${$task.id + displayedInDate.valueOf()})`}
-    stroke={$task.color}
-    stroke-width={fatter ? 6 : fat && !short ? 4 : 2}
-    stroke-dasharray={dashArray ? "4 4" : ""}
-    fill={outline ? "none" : $task.color + "44"}
-    class="cursor-pointer"
-    class:pointer-events-none={outline || pointerEventsNone}
-    on:mouseenter
-    on:mouseleave
-    on:click
-  />
-  <!-- transition:scale={{ duration: transition ? 350 : 0 }} -->
-{/if}
+<!-- {#if dayjs($task.startDate).isSame($selectedDate, "day") || dayjs($task.endDate).isSame($selectedDate, "day")} -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<use
+  href="#task-path-{$task.id + displayedInDate.valueOf()}"
+  clip-path={short ? "" : `url(#task-clip-${$task.id + displayedInDate.valueOf()})`}
+  stroke={$task.color}
+  stroke-width={fatter ? 6 : fat && !short ? 4 : 2}
+  stroke-dasharray={dashArray ? "4 4" : ""}
+  fill={outline ? "none" : $task.color + "44"}
+  class="cursor-pointer"
+  class:pointer-events-none={outline || pointerEventsNone}
+  on:mouseenter
+  on:mouseleave
+  on:click
+/>
+<!-- transition:scale={{ duration: transition ? 350 : 0 }} -->
+<!-- {/if} -->

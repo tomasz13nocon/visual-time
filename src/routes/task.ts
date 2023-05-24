@@ -1,4 +1,4 @@
-import { derived, get, writable, type Writable } from "svelte/store";
+import { derived, get, writable, type Readable, type Writable } from "svelte/store";
 import { fetchingTasks, selectedDate, selectedDateEnd, selectedDateStart, user } from "$lib/stores";
 import type { Dayjs } from "dayjs";
 import type { User } from "firebase/auth";
@@ -58,8 +58,8 @@ export const defaultTaskNames = [
   "Ascending to another dimension",
   "Playing with my pet donkey",
   "Building time machine",
-  "Solving Riemann hypothesis",
-  "Building Dyson sphere",
+  "Solving riemann hypothesis",
+  "Constructing dyson sphere",
   "Reading about trusses",
   "Delaying the crisis",
 ];
@@ -157,10 +157,7 @@ async function fetchTasks(from: Dayjs, to: Dayjs, user: User | null): Promise<Ta
   }
 
   try {
-    const resp = await authedFetch(
-      user,
-      `/api/tasks?from=${from.valueOf()}&to=${to.valueOf()}&includeActive=true`
-    );
+    const resp = await authedFetch(user, `/api/tasks?from=${from.valueOf()}&to=${to.valueOf()}`);
     if (!resp.ok) throw new Error();
     return await resp.json();
   } catch (e) {
@@ -202,15 +199,27 @@ export async function fetchTaskNames(user: User | null) {
 // TODO subscribe to user and store in private field
 class Tracker {
   tasks: Writable<Writable<Task>[]> = writable([]);
-  activeTask: Writable<Task> | null = null;
+  inactiveTasks: Readable<Writable<Task>[]> = derived(this.tasks, ($tasks) => {
+    return $tasks.filter((task) => !get(task).active);
+  });
+  activeTask: Writable<Writable<Task> | null> = writable(null);
   #intervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
+    // user.subscribe((user) => {
+    //   fetchActive(user).then((apiTask) => {
+    //     if (apiTask) {
+    //       apiTask.endDate = Date.now(); // To reduce delay of waiting for first interval
+    //       this.activeTask = writable(new Task(apiTask));
+    //       this.#startTimer();
+    //     }
+    //   });
+    // });
     derived([selectedDateStart, selectedDateEnd, user], (stores) => stores).subscribe(
       ([selectedDateStart, selectedDateEnd, user]) => {
-        this.#stopTimer();
+        // this.#stopTimer();
         this.tasks.set([]);
-        this.activeTask = null;
+        // this.activeTask.set(null);
         fetchingTasks.set(true);
         fetchTasks(selectedDateStart, selectedDateEnd, user).then((apiTasks) => {
           // If what we're fetching doesn't contain the active task then we won't know about it,
@@ -222,7 +231,7 @@ class Tracker {
               const taskStore = writable(task);
               if (task.active) {
                 task.endDate = Date.now(); // To reduce delay of waiting for first interval
-                this.activeTask = taskStore;
+                this.activeTask.set(taskStore);
                 this.#startTimer();
               }
               return taskStore;
@@ -235,9 +244,11 @@ class Tracker {
   }
 
   #startTimer() {
+    this.#stopTimer();
     this.#intervalId = setInterval(() => {
-      if (this.activeTask) {
-        this.activeTask.update((task) => {
+      const activeTask = get(this.activeTask);
+      if (activeTask) {
+        activeTask.update((task) => {
           task.endDate = Date.now();
           return task;
         });
@@ -261,12 +272,14 @@ class Tracker {
 
   stop() {
     this.#stopTimer();
-    this.activeTask?.update((task) => {
-      task.active = false;
-      task.update(get(user));
-      return task;
+    this.activeTask.update((taskStore) => {
+      taskStore?.update((task) => {
+        task.active = false;
+        task.update(get(user));
+        return task;
+      });
+      return null;
     });
-    this.activeTask = null;
   }
 
   addTask(task: Task, startTracking = false) {
@@ -279,7 +292,7 @@ class Tracker {
       task.endDate = Date.now();
       task.active = true;
       this.#startTimer();
-      this.activeTask = taskStore;
+      this.activeTask.set(taskStore);
     }
     // Only add to tasks if it overlaps selected date
     if (
@@ -304,7 +317,7 @@ class Tracker {
   removeTask(task: Task) {
     if (task.active) {
       this.#stopTimer();
-      this.activeTask = null;
+      this.activeTask.set(null);
     }
     this.tasks.update((tasks) => tasks.filter((taskStore) => get(taskStore) !== task));
     task.delete(get(user));

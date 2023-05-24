@@ -6,20 +6,30 @@ export const GET = (async ({ request, url }) => {
   const { user_id, errResp } = await authorize(request);
   if (errResp) return errResp;
 
-  const from = url.searchParams.get("from");
-  const to = url.searchParams.get("to");
-  const includeActive = url.searchParams.get("includeActive") === "true";
-  // TODO validate from and to
+  let from: string | number | null = url.searchParams.get("from");
+  let to: string | number | null = url.searchParams.get("to");
+  // const includeActive = url.searchParams.get("includeActive") === "true";
+  if (!from || !to || isNaN(parseInt(from)) || isNaN(parseInt(to))) {
+    return new Response("'from' and 'to' params required and need to be numbers", { status: 400 });
+  }
+  from = parseInt(from);
+  to = parseInt(to);
 
-  let query = `SELECT user_id as "userId", id, name, color, start_date as "startDate", end_date as "endDate", active
+  const query = `SELECT user_id as "userId", id, name, color, start_date as "startDate", end_date as "endDate", active
 FROM tasks
-WHERE user_id = $1`;
-  if (from) query += " AND end_date >= $2";
-  if (to) query += " AND start_date <= $3";
-  if (includeActive) query += " OR user_id = $1 AND active = true";
-  query += " ORDER BY start_date DESC";
+WHERE user_id = $1
+AND (
+  end_date >= $2
+  AND start_date <= $3
+  OR
+  active = true
+  AND $4 >= $2
+  AND start_date <= $3
+)
+ORDER BY start_date DESC`;
+  // if (includeActive) query += " OR user_id = $1 AND active = true";
 
-  const result = await db.query(query, [user_id, from, to]);
+  const result = await db.query(query, [user_id, from, to, Date.now()]);
 
   return new Response(JSON.stringify(result.rows));
 }) satisfies RequestHandler;

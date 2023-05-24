@@ -7,6 +7,7 @@
   import { clampEnd, clampStart } from "$lib/util";
   import TaskTimes from "./TaskTimes.svelte";
   import { getContext } from "svelte";
+  import { fade, scale } from "svelte/transition";
 
   export let task: Writable<Task>;
   export let mousePos: DOMPoint;
@@ -59,7 +60,13 @@
 
 <!-- time editing controls -->
 {#if $selected}
-  <g stroke={$task.color} stroke-width="1" cursor="pointer">
+  <g
+    stroke={$task.color}
+    stroke-width="1"
+    cursor="pointer"
+    on:mousedown={resizeBtnMouseDown}
+    transition:fade={{ duration: 100 }}
+  >
     <circle
       cx={startResizeBtnPosX}
       cy={startResizeBtnPosY}
@@ -68,7 +75,6 @@
         ? resizeBtnRadius
         : "6"}
       fill={$task.color + (resizingStart ? "bb" : "88")}
-      on:mousedown={resizeBtnMouseDown}
     />
     <circle
       cx={endResizeBtnPosX}
@@ -78,7 +84,6 @@
         ? resizeBtnRadius
         : "6"}
       fill={$task.color + (resizingEnd ? "bb" : "88")}
-      on:mousedown={resizeBtnMouseDown}
     />
   </g>
 {/if}

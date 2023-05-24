@@ -2,9 +2,8 @@
   import { tracker, Task } from "./task";
   import IconButton from "$lib/components/IconButton.svelte";
   import dayjs from "$lib/dayjs";
-  import { get, type Writable } from "svelte/store";
+  import type { Writable } from "svelte/store";
   import { getContext } from "svelte";
-  import { selectedDate } from "$lib/stores";
 
   export let task: Writable<Task>;
   export let getSnappedTime: () => number;
@@ -17,12 +16,8 @@
 
 <div
   class="-mx-2 -my-1 px-2 py-1
-  {$hovered === task ? 'bg-tertiary-400 dark:bg-secondary-900/75' : ''}
-  {$task.active &&
-  !dayjs($task.startDate).isSame(get(selectedDate), 'day') &&
-  !dayjs($task.endDate).isSame(get(selectedDate), 'day')
-    ? 'drop-shadow-lg border-b-2 border-primary-400 dark:border-primary-600 mb-2'
-    : ''}"
+  {$task.active ? 'drop-shadow-lg bg-secondary-100/70 dark:bg-secondary-900 mb-2' : ''}
+  {$hovered === task ? '!bg-secondary-300/50 dark:!bg-secondary-900/75' : ''}"
   on:mouseenter={() => {
     if (!$selected) $hovered = task;
   }}
@@ -32,12 +27,14 @@
 >
   <div class="flex justify-between gap-2">
     <div class="flex gap-2 items-center">
-      <div
-        class="px-2 rounded-md border-2"
-        style:background-color={$task.color + "22"}
-        style:border-color={$task.color}
-      >
-        {$task.name}
+      <div class="bg-surface-50-900-token rounded-md">
+        <div
+          class="px-2 rounded-md border-2"
+          style:background-color={$task.color + "22"}
+          style:border-color={$task.color}
+        >
+          {$task.name}
+        </div>
       </div>
       {#if !$task.active}
         <IconButton

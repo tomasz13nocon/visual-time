@@ -15,7 +15,7 @@
 </script>
 
 <div class="flex w-full h-full">
-  <aside class="w-96 shrink-0 border-r-2 border-surface-700 h-full overflow-y-auto">
+  <aside class="w-96 shrink-0 border-r-2 border-surface-700 h-full overflow-y-scroll">
     <TabGroup justify="justify-center">
       <Tab bind:group={tabSet} name="tab1" value={0}>
         <div class="text-2xl">Tracker</div>
