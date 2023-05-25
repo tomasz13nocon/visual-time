@@ -54,15 +54,22 @@ class TimePos {
 
   snapToGridOrTasks(tasks: Task[]) {
     let minD = Infinity;
+    let snapTo: number | null = null;
+    const snapStrength = 1.5;
     for (const task of tasks) {
       const startD = Math.abs(task.startDate - this.time);
       const endD = Math.abs(task.endDate - this.time);
-      if (startD < gridStep * 1.2 || endD < gridStep * 1.2) {
-        minD = startD < endD ? task.startDate : task.endDate;
+      if (startD < minD) {
+        minD = startD;
+        snapTo = task.startDate;
+      }
+      if (endD < minD) {
+        minD = endD;
+        snapTo = task.endDate;
       }
     }
-    if (minD !== Infinity) {
-      return new TimePos(minD);
+    if (snapTo !== null && minD < gridStep * snapStrength) {
+      return new TimePos(snapTo);
     }
     return this.snapToGrid();
   }

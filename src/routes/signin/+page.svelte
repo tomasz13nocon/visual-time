@@ -9,6 +9,7 @@
   } from "firebase/auth";
   import { FirebaseError } from "firebase/app";
   import { goto } from "$app/navigation";
+  import { user } from "$lib/stores";
 
   let creatingAcc = false;
   let email = "";
@@ -24,7 +25,6 @@
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      goto("/");
     } catch (e) {
       if (e instanceof FirebaseError) {
         if (e.code === "auth/email-already-in-use") {
@@ -44,7 +44,6 @@
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      goto("/");
     } catch (e) {
       if (e instanceof FirebaseError) {
         if (e.code === "") {
@@ -59,7 +58,6 @@
   async function signinGoogle() {
     try {
       await signInWithPopup(auth, googleProvider);
-      goto("/");
     } catch (e) {
       error = "Oops! Something went wrong.";
     }
@@ -71,6 +69,10 @@
     } else {
       passwordError = "";
     }
+  }
+
+  $: if ($user) {
+    goto("/");
   }
 </script>
 
