@@ -12,6 +12,8 @@
   let hovered: Writable<Writable<Task> | null> = getContext("hovered");
   let selected: Writable<boolean> = getContext("selected");
 
+  let tasks = tracker.tasks;
+
   $: activeTaskElapsed = $task.endDate - $task.startDate;
 </script>
 
@@ -21,7 +23,7 @@
     {$task.active ? 'drop-shadow-lg bg-secondary-100/70 dark:bg-secondary-900 mb-2' : ''}
     {$hovered === task ? '!bg-secondary-300/50 dark:!bg-secondary-900/75' : ''}"
     on:mouseenter={() => {
-      if (!$selected) $hovered = task;
+      if (!$selected && $tasks.includes(task)) $hovered = task;
     }}
     on:mouseleave={() => {
       if (!$selected) $hovered = null;

@@ -7,7 +7,6 @@
   import { clampEnd, clampStart } from "$lib/util";
   import TaskTimes from "./TaskTimes.svelte";
   import { getContext } from "svelte";
-  import { fade, scale } from "svelte/transition";
 
   export let task: Writable<Task>;
   export let mousePos: DOMPoint;

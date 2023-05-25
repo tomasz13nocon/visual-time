@@ -59,7 +59,7 @@ export const defaultTaskNames = [
   "Playing with my pet donkey",
   "Building time machine",
   "Solving riemann hypothesis",
-  "Constructing dyson sphere",
+  "Constructing Dyson sphere",
   "Reading about trusses",
   "Delaying the crisis",
 ];
