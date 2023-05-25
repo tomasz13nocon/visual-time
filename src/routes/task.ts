@@ -200,6 +200,7 @@ export async function fetchTaskNames(user: User | null) {
 class Tracker {
   tasks: Writable<Writable<Task>[]> = writable([]);
   inactiveTasks: Readable<Writable<Task>[]> = derived(this.tasks, ($tasks) => {
+    console.log($tasks.map((t) => get(t).name + " " + get(t).active));
     return $tasks.filter((task) => !get(task).active);
   });
   activeTask: Writable<Writable<Task> | null> = writable(null);
@@ -274,6 +275,7 @@ class Tracker {
 
   stop() {
     this.#stopTimer();
+    // console.log(get(this.tasks).map((t) => get(t).name));
     this.activeTask.update((taskStore) => {
       taskStore?.update((task) => {
         task.active = false;
@@ -282,6 +284,7 @@ class Tracker {
       });
       return null;
     });
+    // console.log(get(this.tasks).map((t) => get(t).name));
   }
 
   addTask(task: Task, startTracking = false) {

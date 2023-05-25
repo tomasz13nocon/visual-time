@@ -143,7 +143,7 @@
     <TaskArc
       {task}
       on:mouseenter={() => {
-        if (!$selected) $hovered = task;
+        if (!$selected && !drawing) $hovered = task;
       }}
       on:mouseleave={() => {
         if (!$selected) $hovered = null;

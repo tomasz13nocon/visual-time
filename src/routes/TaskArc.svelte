@@ -54,6 +54,6 @@
   on:mouseenter
   on:mouseleave
   on:click
+  transition:scale={{ duration: transition ? 360 : 0 }}
 />
-<!-- transition:scale={{ duration: transition ? 350 : 0 }} -->
 <!-- {/if} -->

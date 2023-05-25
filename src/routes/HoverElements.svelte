@@ -8,8 +8,6 @@
   import TaskTimes from "./TaskTimes.svelte";
   import { getContext } from "svelte";
   import { fade, scale } from "svelte/transition";
-  import { tweened } from "svelte/motion";
-  import { quintOut } from "svelte/easing";
 
   export let task: Writable<Task>;
   export let mousePos: DOMPoint;
@@ -22,24 +20,16 @@
   $: clampedEnd = clampEnd($task.endDate);
   $: taskCenter = fromMs(clampedStart + (clampedEnd - clampedStart) / 2);
 
-  const options = { duration: 200, easing: quintOut };
-  let startResizeBtnPosX = tweened(fromMs(clampedStart).toPosX(rOuter - 1), options);
-  let startResizeBtnPosY = tweened(fromMs(clampedStart).toPosY(rOuter - 1), options);
-  let endResizeBtnPosX = tweened(fromMs(clampedEnd).toPosX(rOuter - 1), options);
-  let endResizeBtnPosY = tweened(fromMs(clampedEnd).toPosY(rOuter - 1), options);
-  $: $startResizeBtnPosX = fromMs(clampedStart).toPosX(rOuter - 1);
-  $: $startResizeBtnPosY = fromMs(clampedStart).toPosY(rOuter - 1);
-  $: $endResizeBtnPosX = fromMs(clampedEnd).toPosX(rOuter - 1);
-  $: $endResizeBtnPosY = fromMs(clampedEnd).toPosY(rOuter - 1);
+  $: startResizeBtnPosX = fromMs(clampedStart).toPosX(rOuter - 1);
+  $: startResizeBtnPosY = fromMs(clampedStart).toPosY(rOuter - 1);
+  $: endResizeBtnPosX = fromMs(clampedEnd).toPosX(rOuter - 1);
+  $: endResizeBtnPosY = fromMs(clampedEnd).toPosY(rOuter - 1);
   const resizeBtnRadius = 25;
   $: startResizeBtnMouseD = Math.hypot(
-    mousePos.x - $startResizeBtnPosX,
-    mousePos.y - $startResizeBtnPosY
+    mousePos.x - startResizeBtnPosX,
+    mousePos.y - startResizeBtnPosY
   );
-  $: endResizeBtnMouseD = Math.hypot(
-    mousePos.x - $endResizeBtnPosX,
-    mousePos.y - $endResizeBtnPosY
-  );
+  $: endResizeBtnMouseD = Math.hypot(mousePos.x - endResizeBtnPosX, mousePos.y - endResizeBtnPosY);
 
   function resizeBtnMouseDown() {
     if (startResizeBtnMouseD < endResizeBtnMouseD) {
@@ -70,17 +60,10 @@
 
 <!-- time editing controls -->
 {#if $selected}
-  <g
-    stroke={$task.color}
-    stroke-width="1"
-    cursor="pointer"
-    on:mousedown={resizeBtnMouseDown}
-    transition:fade={{ duration: 200 }}
-  >
-    {console.log($startResizeBtnPosX)}
+  <g stroke={$task.color} stroke-width="1" cursor="pointer" on:mousedown={resizeBtnMouseDown}>
     <circle
-      cx={$startResizeBtnPosX}
-      cy={$startResizeBtnPosY}
+      cx={startResizeBtnPosX}
+      cy={startResizeBtnPosY}
       r={(startResizeBtnMouseD < resizeBtnRadius && startResizeBtnMouseD < endResizeBtnMouseD) ||
       resizingStart
         ? resizeBtnRadius
@@ -88,8 +71,8 @@
       fill={$task.color + (resizingStart ? "bb" : "88")}
     />
     <circle
-      cx={$endResizeBtnPosX}
-      cy={$endResizeBtnPosY}
+      cx={endResizeBtnPosX}
+      cy={endResizeBtnPosY}
       r={(endResizeBtnMouseD < resizeBtnRadius && endResizeBtnMouseD < startResizeBtnMouseD) ||
       resizingEnd
         ? resizeBtnRadius
