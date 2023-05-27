@@ -4,6 +4,7 @@
   import dayjs from "$lib/dayjs";
   import type { Writable } from "svelte/store";
   import { getContext } from "svelte";
+  import TaskName from "./TaskName.svelte";
 
   export let task: Writable<Task>;
   export let getSnappedTime: () => number;
@@ -31,15 +32,7 @@
   >
     <div class="flex justify-between gap-2">
       <div class="flex gap-2 items-center">
-        <div class="bg-surface-50-900-token rounded-md">
-          <div
-            class="px-2 rounded-md border-2"
-            style:background-color={$task.color + "22"}
-            style:border-color={$task.color}
-          >
-            {$task.name}
-          </div>
-        </div>
+        <TaskName task={$task} />
         {#if !$task.active}
           <IconButton
             icon="eva:arrow-right-fill"

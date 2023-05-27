@@ -56,7 +56,9 @@
     }
     if (resizingStart) {
       const newValue = fromPos(mousePos.x, mousePos.y, $selectedDateStart)
-        .snapToGridOrTasks($tasks.map((taskStore) => get(taskStore)))
+        .snapToGridOrTasks(
+          $tasks.map((taskStore) => get(taskStore)).filter((task) => task !== $resizingStart)
+        )
         .toMs();
       if (newValue > $resizingStart.endDate) {
         $resizingStart.startDate = $resizingStart.endDate;
@@ -69,7 +71,9 @@
     }
     if (resizingEnd) {
       const newValue = fromPos(mousePos.x, mousePos.y, $selectedDateStart)
-        .snapToGridOrTasks($tasks.map((taskStore) => get(taskStore)))
+        .snapToGridOrTasks(
+          $tasks.map((taskStore) => get(taskStore)).filter((task) => task !== $resizingEnd)
+        )
         .toMs();
       if (newValue < $resizingEnd.startDate) {
         $resizingEnd.endDate = $resizingEnd.startDate;

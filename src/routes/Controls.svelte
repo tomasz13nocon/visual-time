@@ -1,13 +1,13 @@
 <script lang="ts">
   import TaskListing from "./TaskListing.svelte";
-  import { Task, taskDraft, tracker, colors, createTaskDraft } from "./task";
+  import { taskDraft, tracker, colors, createTaskDraft } from "./task";
   import IconButton from "$lib/components/IconButton.svelte";
   import dayjs from "$lib/dayjs";
   import { selectedDate } from "$lib/stores";
-  import { get, type Writable } from "svelte/store";
+  import { get } from "svelte/store";
   import { localStorageStore } from "@skeletonlabs/skeleton";
   import ColorButton from "./ColorButton.svelte";
-  import { blur, fly, scale, slide } from "svelte/transition";
+  import { slide } from "svelte/transition";
   import autoAnimate from "@formkit/auto-animate";
 
   const { tasks, activeTask } = tracker;
@@ -20,7 +20,24 @@
     end?: boolean;
     msg?: string;
   } = {};
-  let taskNames = [];
+  let taskTemplates = [];
+
+  // $: filtered = taskTemplates.filter((taskTemplate) =>
+  //   taskTemplate.name
+  //     .toLowerCase()
+  //     .replace(/\s+/g, "")
+  //     .includes($combobox.filter.toLowerCase().replace(/\s+/g, ""))
+  // );
+
+  async function fetchTaskTemplates() {
+    if (taskTemplates.length) {
+      return;
+    }
+    // TODO handle errors
+    const res = await fetch("/api/tasks/templates");
+    const json = await res.json();
+    taskTemplates = json;
+  }
 
   function getSnappedTime() {
     let now = Date.now();
@@ -72,10 +89,10 @@
 </script>
 
 <div class="p-2 flex flex-col gap-4">
-  <div class="flex gap-2 items-center">
-    <label class="label">
+  <div class="flex gap-2 items-center relative">
+    <label class="label relative">
       <input
-        class="input"
+        class="input pr-8"
         type="text"
         placeholder="What are you working on?"
         bind:value={$taskDraft.name}
@@ -84,6 +101,7 @@
             startTracking();
           }
         }}
+        on:focus={fetchTaskTemplates}
       />
     </label>
 
