@@ -1,8 +1,7 @@
 import pg from "pg";
-console.log(pg.Pool);
 
 const pool = new pg.Pool({
-  database: "time_tracker",
+  database: "visual_time",
 });
 
 export { pool as default };
