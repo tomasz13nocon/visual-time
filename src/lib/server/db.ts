@@ -1,7 +1,23 @@
 import pg from "pg";
+import { PrismaClient } from "@prisma/client";
 
-const pool = new pg.Pool({
-  database: "visual_time",
+const prisma = new PrismaClient({
+  // log: [
+  //   {
+  //     emit: "event",
+  //     level: "query",
+  //   },
+  // ],
 });
 
-export { pool as default };
+// prisma.$on("query", (e) => {
+//   console.log(`${e.query} ${e.params}`);
+// });
+
+export default prisma;
+
+// const pool = new pg.Pool({
+//   database: "visual_time",
+// });
+
+// export default pool;

@@ -10,10 +10,10 @@
   export let getSnappedTime: () => number;
   export let excludeActive = false;
 
-  let hovered: Writable<Writable<Task> | null> = getContext("hovered");
-  let selected: Writable<boolean> = getContext("selected");
+  const hovered: Writable<Writable<Task> | null> = getContext("hovered");
+  const selected: Writable<boolean> = getContext("selected");
 
-  let tasks = tracker.tasks;
+  const tasks = tracker.tasks;
 
   $: activeTaskElapsed = $task.endDate - $task.startDate;
 </script>

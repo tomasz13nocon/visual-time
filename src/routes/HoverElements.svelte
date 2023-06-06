@@ -39,14 +39,14 @@
   }
 </script>
 
-<TaskArc {task} outline fat={!$selected} fatter={$selected} />
+<TaskArc {task} outline pointerEventsNone fat={!$selected} fatter={$selected} />
 
 <!-- start and end times -->
 <TaskTimes {task} />
 
 <!-- title on circle -->
 {#if !$selected}
-  {#key $task}
+  {#key $task.name}
     <BulletText
       x={taskCenter.toPosX(rOuter - (rOuter - rInner) / 2)}
       y={taskCenter.toPosY(rOuter - (rOuter - rInner) / 2)}

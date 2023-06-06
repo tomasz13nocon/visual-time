@@ -7,8 +7,8 @@ export async function authorize(request: Request) {
   }
   token = token.slice(7);
 
-  const { user_id } = await app.auth().verifyIdToken(token);
+  const { user_id: userId } = await app.auth().verifyIdToken(token);
   // TODO check if invalid
 
-  return { user_id };
+  return { userId };
 }

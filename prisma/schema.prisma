@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["extendedWhereUnique"]
+
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model Task {
+  id         Int     @id @default(autoincrement())
+  userId     String  @map("user_id")
+  name       String
+  color      String
+  startDate  Float   @map("start_date")
+  endDate    Float   @map("end_date")
+  active     Boolean
+  tags       Tag[]
+
+  @@map("tasks")
+}
+
+model Tag {
+  id        Int     @id @default(autoincrement())
+  userId    String  @map("user_id")
+  name      String
+  tasks     Task[]
+
+  @@map("tags")
+}

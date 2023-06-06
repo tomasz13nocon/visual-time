@@ -131,6 +131,8 @@
     on:mouseenter={() => (baseHovered = true)}
     on:mouseleave={() => (baseHovered = false)}
     on:mousedown={() => {
+      $selected = false;
+      $hovered = null;
       drawing = true;
       if (mousePos) {
         const start = fromPos(mousePos.x, mousePos.y, $selectedDateStart)

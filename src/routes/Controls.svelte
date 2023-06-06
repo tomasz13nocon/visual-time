@@ -1,49 +1,40 @@
 <script lang="ts">
   import TaskListing from "./TaskListing.svelte";
-  import { taskDraft, tracker, colors, createTaskDraft } from "./task";
+  import {
+    taskDraft,
+    tracker,
+    colors,
+    createTaskDraft,
+    type TagTemplate,
+    fetchTagTemplates,
+  } from "./task";
   import IconButton from "$lib/components/IconButton.svelte";
   import dayjs from "$lib/dayjs";
-  import { selectedDate } from "$lib/stores";
-  import { get } from "svelte/store";
-  import { localStorageStore } from "@skeletonlabs/skeleton";
+  import { selectedDate, user } from "$lib/stores";
+  import { get, writable } from "svelte/store";
+  import { Autocomplete, InputChip, localStorageStore } from "@skeletonlabs/skeleton";
   import ColorButton from "./ColorButton.svelte";
   import { slide } from "svelte/transition";
   import autoAnimate from "@formkit/auto-animate";
+  import TaskNameInput from "./TaskNameInput.svelte";
+  import TaskTagsInput from "./TaskTagsInput.svelte";
 
   const { tasks, activeTask } = tracker;
   let from = "";
   let to = "";
   let snapToLast = false;
-  let showMoreColors = localStorageStore("showMoreColors", false);
+  const showMoreColors = localStorageStore("showMoreColors", false);
   let addTaskError: {
     start?: boolean;
     end?: boolean;
     msg?: string;
   } = {};
-  let taskTemplates = [];
-
-  // $: filtered = taskTemplates.filter((taskTemplate) =>
-  //   taskTemplate.name
-  //     .toLowerCase()
-  //     .replace(/\s+/g, "")
-  //     .includes($combobox.filter.toLowerCase().replace(/\s+/g, ""))
-  // );
-
-  async function fetchTaskTemplates() {
-    if (taskTemplates.length) {
-      return;
-    }
-    // TODO handle errors
-    const res = await fetch("/api/tasks/templates");
-    const json = await res.json();
-    taskTemplates = json;
-  }
 
   function getSnappedTime() {
-    let now = Date.now();
+    const now = Date.now();
     if (snapToLast) {
-      for (let task of $tasks) {
-        let taskEnd = get(task).endDate;
+      for (const task of $tasks) {
+        const taskEnd = get(task).endDate;
         if (taskEnd <= now) {
           return taskEnd;
         }
@@ -59,6 +50,7 @@
   }
 
   function addTask() {
+    //{{{
     addTaskError = {};
 
     const now = $selectedDate.format("YYYY-MM-DD") + "_";
@@ -85,30 +77,19 @@
 
     tracker.addTask($taskDraft);
     $taskDraft = createTaskDraft($taskDraft);
-  }
+  } //}}}
 </script>
 
-<div class="p-2 flex flex-col gap-4">
-  <div class="flex gap-2 items-center relative">
-    <label class="label relative">
-      <input
-        class="input pr-8"
-        type="text"
-        placeholder="What are you working on?"
-        bind:value={$taskDraft.name}
-        on:keydown={(e) => {
-          if (e.key === "Enter") {
-            startTracking();
-          }
-        }}
-        on:focus={fetchTaskTemplates}
-      />
-    </label>
+<div class="p-2 flex flex-col gap-4 relative">
+  <div class="flex gap-2 items-center">
+    <TaskNameInput {startTracking} />
 
     <IconButton icon="eva:arrow-right-fill" on:click={startTracking} title="Start tracking" />
 
     <IconButton icon="eva:plus-fill" on:click={addTask} title="Add task entry" />
   </div>
+
+  <TaskTagsInput />
 
   <label class="flex items-center space-x-2 w-fit">
     <input class="checkbox" type="checkbox" bind:checked={snapToLast} />

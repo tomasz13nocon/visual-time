@@ -5,6 +5,8 @@
   import IconButton from "$lib/components/IconButton.svelte";
   import ColorButton from "./ColorButton.svelte";
   import { clickOutside } from "$lib/clickOutside";
+  import Icon from "@iconify/svelte";
+  import Tag from "$lib/components/Tag.svelte";
 
   export let task: Writable<Task>;
 
@@ -21,6 +23,10 @@
   function commitNameEdit() {
     if (!editingName) return;
     editingName = false;
+    if (!$task.name.trim()) {
+      $task.name = prevName;
+      return;
+    }
     if ($task.name !== prevName) {
       tracker.updateTask($task);
     }
@@ -54,7 +60,13 @@
     </h3>
   {/if}
 
-  <div class="flex gap-1 justify-center mb-4 mt-1">
+  <div class="mt-1 flex gap-1 justify-center">
+    {#each $task.tags as tag}
+      <Tag {tag} />
+    {/each}
+  </div>
+
+  <div class="flex gap-1 justify-center mb-4 mt-2">
     <IconButton icon="eva:edit-fill" medium on:click={startEditingName} title="Change name" />
     <IconButton
       icon="eva:color-palette-fill"

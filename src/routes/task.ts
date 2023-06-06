@@ -3,6 +3,14 @@ import { fetchingTasks, selectedDate, selectedDateEnd, selectedDateStart, user }
 import type { Dayjs } from "dayjs";
 import type { User } from "firebase/auth";
 
+export interface TaskTemplate {
+  name: string;
+  color: string;
+}
+export interface TagTemplate {
+  name: string;
+}
+
 // prettier-ignore
 export const colors = [
   "#f43f5e",
@@ -68,6 +76,10 @@ export type TaskColor = (typeof colors)[0];
 
 export const fetchError = writable("");
 
+export interface Tag {
+  name: string;
+}
+
 export class Task {
   // in case of errors/or slow network + race conditions
   // we can have multiple unpersisted tasks, so we need to have a unique local id
@@ -77,6 +89,7 @@ export class Task {
   startDate = 0;
   endDate = 0;
   active = false;
+  tags: Tag[] = [];
 
   constructor(init?: Partial<Task>) {
     if (init) Object.assign(this, init);
@@ -181,10 +194,10 @@ async function fetchActive(user: User | null): Promise<Task | undefined | null> 
   }
 }
 
-export async function fetchTaskNames(user: User | null) {
+export async function fetchTaskTemplates(user: User | null): Promise<TaskTemplate[]> {
   if (!user) {
     // TODO local storage
-    return;
+    return [];
   }
 
   try {
@@ -194,6 +207,23 @@ export async function fetchTaskNames(user: User | null) {
   } catch (e) {
     fetchError.set("Error: Could not fetch task names");
   }
+  return [];
+}
+
+export async function fetchTagTemplates(user: User | null): Promise<TagTemplate[]> {
+  if (!user) {
+    // TODO local storage
+    return [];
+  }
+
+  try {
+    const resp = await authedFetch(user, `/api/tags`);
+    if (!resp.ok) throw new Error();
+    return await resp.json();
+  } catch (e) {
+    fetchError.set("Error: Could not fetch tag names");
+  }
+  return [];
 }
 
 // TODO subscribe to user and store in private field
