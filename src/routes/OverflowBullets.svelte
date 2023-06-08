@@ -7,21 +7,12 @@
   import OverflowBullet from "./OverflowBullet.svelte";
 
   export let task: Writable<Task>;
-
-  // $: clampedStart = clampStart($task.startDate);
-  // $: clampedEnd = clampEnd($task.endDate);
 </script>
 
-<!-- {#if dayjs($task.startDate).isSame($selectedDate, "day") || dayjs($task.endDate).isSame($selectedDate, "day")} -->
-<!-- {#if clampedStart !== $task.startDate} -->
 {#if $task.startDate < $selectedDateStart.valueOf()}
   <!-- TODO pass number, not task, to aboid rerenders -->
   <OverflowBullet negative {task} />
 {/if}
-<!-- {/if} -->
-<!-- {#if clampedEnd !== $task.endDate} -->
-{#if $task.endDate > $selectedDateEnd.valueOf()}
+{#if $task.endDate - 1 > $selectedDateEnd.valueOf()}
   <OverflowBullet {task} />
 {/if}
-<!-- {/if} -->
-<!-- {/if} -->

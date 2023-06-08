@@ -23,6 +23,7 @@
     listboxVisible,
     focusedValue,
     filteredValues,
+    inputValue,
     comboboxInput,
     comboboxContainer,
     comboboxItem,
@@ -32,6 +33,8 @@
       $taskDraft.name = value.name;
     },
   });
+
+  $: $taskDraft.name = $inputValue;
 </script>
 
 <div use:comboboxContainer class="relative">
@@ -41,7 +44,7 @@
       class="input pr-8"
       type="text"
       placeholder="What are you working on?"
-      bind:value={$taskDraft.name}
+      bind:value={$inputValue}
       on:keydown={(e) => {
         if (e.key === "Enter" && !$listboxVisible) {
           startTracking();

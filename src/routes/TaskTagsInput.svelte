@@ -6,8 +6,7 @@
   import { user } from "$lib/stores";
   import Tag from "$lib/components/Tag.svelte";
 
-  const tagTemplates = writable<(TagTemplate & { value: string })[]>([]);
-  let tagName = "";
+  const tagTemplates = writable<(TagTemplate & { value: string; add?: boolean })[]>([]);
 
   async function getTemplates() {
     if ($tagTemplates.length) {
@@ -23,20 +22,25 @@
     listboxVisible,
     focusedValue,
     filteredValues,
+    inputValue,
     comboboxInput,
     comboboxContainer,
     comboboxItem,
   } = createCombobox(tagTemplates, {
     onSelection: (value) => {
       $taskDraft.tags = [...$taskDraft.tags, { name: value.value }];
-      tagName = "";
+      $inputValue = "";
     },
   });
 
-  function addTag() {
-    $taskDraft.tags = [...$taskDraft.tags, { name: tagName }];
-    tagName = "";
+  $: if ($inputValue && !$filteredValues.find((t) => t.name === $inputValue || t.add)) {
+    $filteredValues = [...$filteredValues, { name: $inputValue, value: $inputValue, add: true }];
   }
+
+  // function addTag() {
+  //   $taskDraft.tags = [...$taskDraft.tags, { name: tagName }];
+  //   tagName = "";
+  // }
 </script>
 
 <div use:comboboxContainer class="relative">
@@ -48,27 +52,14 @@
     class="input px-3 py-1"
     type="text"
     placeholder="Tags (press enter to accept)"
-    bind:value={tagName}
-    on:keydown={(e) => {
-      // console.log($focusedValue);
-      // if (e.key === "Enter" && !$focusedValue && tagName) {
-      //   addTag();
-      // }
-    }}
+    bind:value={$inputValue}
     on:focus={getTemplates}
   />
   {#if $listboxVisible}
     <div
       class="absolute top-full bg-surface-50-900-token z-10 py-1 drop-shadow-lg max-h-80 overflow-y-auto rounded"
     >
-      {#if tagName}
-        <div
-          class="cursor-pointer px-3 py-1 hover:bg-secondary-300/50 hover:dark:bg-secondary-900/75"
-        >
-          Add <Tag tag={{ name: tagName }} />
-        </div>
-      {/if}
-      <ul class="flex flex-wrap">
+      <ul class="flex flex-col">
         {#each $filteredValues as value}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <li
@@ -78,7 +69,7 @@
               ? 'bg-secondary-300/50 dark:bg-secondary-900/75 outline-secondary-500 outline-2 -outline-offset-2 outline'
               : ''}"
           >
-            <Tag tag={value} />
+            {value.add ? "Add " : ""}<Tag tag={value} />
           </li>
         {/each}
       </ul>

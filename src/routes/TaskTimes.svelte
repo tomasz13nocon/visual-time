@@ -34,7 +34,7 @@
       {:else}
         {endDate.format("H:mm")}
       {/if}
-      {#if !endDate.isSame($selectedDate, "day")}
+      {#if !endDate.subtract(1, "ms").isSame($selectedDate, "day")}
         {` (+${diffDays}d)`}
       {/if}
     </text>

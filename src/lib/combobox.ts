@@ -1,6 +1,6 @@
 import { derived, get, writable, type Writable } from "svelte/store";
 
-type Value = { value: string; _node: HTMLElement | null };
+type Value = { value: string; _node?: HTMLElement | null };
 
 interface Options<T> {
   onSelection?: (value: T) => void;
@@ -13,39 +13,44 @@ export function createCombobox<T extends Value>(
   const listboxVisible = writable(false);
   const filteredValues = writable<T[]>([]);
   const focusedValue = writable<T | null>(null);
-  let inputNode: HTMLInputElement;
+  const inputValue = writable<string>("");
   let localValues: T[] = [];
-  let localInput = "";
   let localListboxVisible = false;
   let localFilteredValues: T[] = [];
   let localFocusedValue: T | null = null;
+  let localInputValue = "";
+
+  let focused = false;
+
+  inputValue.subscribe((value) => {
+    localInputValue = value;
+  });
   ("subscribe" in values
     ? derived(values as Writable<T[]>, ($values) => $values)
     : writable(values as T[])
   ).subscribe((values) => {
     localValues = values.map((v) => ({ ...v, _node: null }));
-    filteredValues.set(filterValues(values, localInput));
+    filterValues();
   });
   listboxVisible.subscribe((value) => (localListboxVisible = value));
   filteredValues.subscribe((values) => (localFilteredValues = values));
   focusedValue.subscribe((value) => (localFocusedValue = value));
 
-  function filterValues(values: T[], input: string) {
-    return values.filter((value) => {
-      return value.value.toLowerCase().includes(input.toLowerCase());
-    });
+  function filterValues() {
+    filteredValues.set(
+      localValues.filter((value) => {
+        return value.value.toLowerCase().includes(localInputValue.toLowerCase());
+      })
+    );
   }
 
-  function onInputInput(event: Event) {
-    const input = (event.target as HTMLInputElement).value;
-    localInput = input;
-    filteredValues.set(filterValues(localValues, input));
+  function onInputInput() {
+    filterValues();
   }
 
   function acceptItem(value: T) {
-    localInput = value.value;
-    inputNode.value = value.value;
-    filteredValues.set(filterValues(localValues, localInput));
+    inputValue.set(value.value);
+    filterValues();
     hideListbox();
     onSelection && onSelection(value);
   }
@@ -64,7 +69,7 @@ export function createCombobox<T extends Value>(
 
   function showListbox() {
     listboxVisible.set(true);
-    filteredValues.set(filterValues(localValues, localInput));
+    filterValues();
   }
 
   function hideListbox() {
@@ -78,7 +83,6 @@ export function createCombobox<T extends Value>(
   }
 
   function comboboxInput(node: HTMLInputElement) {
-    inputNode = node;
     node.addEventListener("focus", showListbox);
     node.addEventListener("blur", hideListboxDelay);
     node.addEventListener("input", onInputInput);
@@ -136,6 +140,7 @@ export function createCombobox<T extends Value>(
     listboxVisible,
     focusedValue,
     filteredValues,
+    inputValue,
     comboboxInput,
     comboboxContainer,
     comboboxItem,

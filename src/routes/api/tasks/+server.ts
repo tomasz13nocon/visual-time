@@ -12,7 +12,7 @@ export const GET = (async ({ request, url }) => {
   if (!from || !to || isNaN(parseInt(from)) || isNaN(parseInt(to))) {
     return new Response("'from' and 'to' params required and need to be numbers", { status: 400 });
   }
-  from = parseInt(from);
+  from = parseInt(from) + 1; // +1 to exclude entries ending at midnight
   to = parseInt(to);
 
   //   const query = `SELECT user_id as "userId", id, name, color, start_date as "startDate", end_date as "endDate", active

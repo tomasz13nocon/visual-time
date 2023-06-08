@@ -2,7 +2,7 @@ import type { Dayjs } from "dayjs";
 import type { Task } from "./task";
 
 export const rOuter = 360;
-export const rInner = 240;
+export const rInner = 220;
 const gridStepMinutes = 5;
 const gridStep = gridStepMinutes * 60 * 1000;
 

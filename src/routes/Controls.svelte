@@ -44,6 +44,7 @@
   }
 
   function startTracking() {
+    console.log($taskDraft);
     $taskDraft.startDate = getSnappedTime();
     tracker.addTask($taskDraft, true);
     $taskDraft = createTaskDraft($taskDraft);
