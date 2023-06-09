@@ -20,7 +20,8 @@ export function createCombobox<T extends Value>(
   let localFocusedValue: T | null = null;
   let localInputValue = "";
 
-  let focused = false;
+  let popoverNode: HTMLElement;
+  let isFocused = false;
 
   inputValue.subscribe((value) => {
     localInputValue = value;
@@ -55,6 +56,62 @@ export function createCombobox<T extends Value>(
     onSelection && onSelection(value);
   }
 
+  function showListbox() {
+    listboxVisible.set(true);
+    filterValues();
+  }
+
+  function hideListbox() {
+    listboxVisible.set(false);
+    focusedValue.set(null);
+    // filteredValues.set(localValues);
+  }
+
+  function onBlur(e: FocusEvent) {
+    if (popoverNode.contains(e.relatedTarget)) {
+      return;
+    }
+    hideListbox();
+  }
+
+  function containerKeydown(event: KeyboardEvent) {
+    switch (event.key) {
+      case "ArrowDown":
+        if (localFocusedValue) {
+          const index = localFilteredValues.indexOf(localFocusedValue);
+          focusedValue.set(
+            localFilteredValues[Math.min(index + 1, localFilteredValues.length - 1)] ?? null
+          );
+        } else {
+          focusedValue.set(localFilteredValues[0] ?? null);
+          listboxVisible.set(true);
+        }
+        localFocusedValue?._node?.scrollIntoView({ block: "nearest" });
+        break;
+      case "ArrowUp":
+        if (localFocusedValue) {
+          const index = localFilteredValues.indexOf(localFocusedValue);
+          focusedValue.set(localFilteredValues[Math.max(index - 1, 0)] ?? null);
+        } else {
+          focusedValue.set(localFilteredValues[localFilteredValues.length - 1] ?? null);
+          listboxVisible.set(true);
+        }
+        localFocusedValue?._node?.scrollIntoView({ block: "nearest" });
+        break;
+      case "Enter":
+        if (localFocusedValue) {
+          acceptItem(localFocusedValue);
+        }
+        break;
+      case "Escape":
+        hideListbox();
+        break;
+      case "Tab":
+        hideListbox();
+        break;
+    }
+  }
+
   function comboboxItem(node: HTMLElement, value: T) {
     const acceptThisItem = acceptItem.bind(null, value);
     node.addEventListener("click", acceptThisItem);
@@ -67,73 +124,24 @@ export function createCombobox<T extends Value>(
     };
   }
 
-  function showListbox() {
-    listboxVisible.set(true);
-    filterValues();
-  }
-
-  function hideListbox() {
-    listboxVisible.set(false);
-    focusedValue.set(null);
-    // filteredValues.set(localValues);
-  }
-
-  function hideListboxDelay() {
-    setTimeout(() => hideListbox(), 200);
-  }
-
   function comboboxInput(node: HTMLInputElement) {
     node.addEventListener("focus", showListbox);
-    node.addEventListener("blur", hideListboxDelay);
+    node.addEventListener("blur", onBlur);
     node.addEventListener("input", onInputInput);
-
-    return {
-      destroy() {
-        node.removeEventListener("focus", showListbox);
-        node.removeEventListener("blur", hideListboxDelay);
-        node.removeEventListener("input", onInputInput);
-      },
-    };
-  }
-
-  function comboboxContainer(node: HTMLElement) {
-    function containerKeydown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        hideListbox();
-      } else if (event.key === "ArrowDown") {
-        if (localFocusedValue) {
-          const index = localFilteredValues.indexOf(localFocusedValue);
-          focusedValue.set(
-            localFilteredValues[Math.min(index + 1, localFilteredValues.length - 1)] ?? null
-          );
-        } else {
-          focusedValue.set(localFilteredValues[0] ?? null);
-          listboxVisible.set(true);
-        }
-        localFocusedValue?._node?.scrollIntoView({ block: "nearest" });
-      } else if (event.key === "ArrowUp") {
-        if (localFocusedValue) {
-          const index = localFilteredValues.indexOf(localFocusedValue);
-          focusedValue.set(localFilteredValues[Math.max(index - 1, 0)] ?? null);
-        } else {
-          focusedValue.set(localFilteredValues[localFilteredValues.length - 1] ?? null);
-          listboxVisible.set(true);
-        }
-        localFocusedValue?._node?.scrollIntoView({ block: "nearest" });
-      } else if (event.key === "Enter") {
-        if (localFocusedValue) {
-          acceptItem(localFocusedValue);
-        }
-      }
-    }
-
     node.addEventListener("keydown", containerKeydown);
 
     return {
       destroy() {
+        node.removeEventListener("focus", showListbox);
+        node.removeEventListener("blur", onBlur);
+        node.removeEventListener("input", onInputInput);
         node.removeEventListener("keydown", containerKeydown);
       },
     };
+  }
+
+  function comboboxPopover(node: HTMLElement) {
+    popoverNode = node;
   }
 
   return {
@@ -142,7 +150,7 @@ export function createCombobox<T extends Value>(
     filteredValues,
     inputValue,
     comboboxInput,
-    comboboxContainer,
     comboboxItem,
+    comboboxPopover,
   };
 }

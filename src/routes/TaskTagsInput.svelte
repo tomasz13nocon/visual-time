@@ -1,7 +1,7 @@
 <script lang="ts">
   import { InputChip } from "@skeletonlabs/skeleton";
   import { taskDraft, type TagTemplate, fetchTagTemplates } from "./task";
-  import { createCombobox } from "$lib/combobox";
+  import { createCombobox } from "$lib/components/combobox/combobox";
   import { writable } from "svelte/store";
   import { user } from "$lib/stores";
   import Tag from "$lib/components/Tag.svelte";
@@ -24,8 +24,8 @@
     filteredValues,
     inputValue,
     comboboxInput,
-    comboboxContainer,
     comboboxItem,
+    comboboxPopover,
   } = createCombobox(tagTemplates, {
     onSelection: (value) => {
       $taskDraft.tags = [...$taskDraft.tags, { name: value.value }];
@@ -43,7 +43,7 @@
   // }
 </script>
 
-<div use:comboboxContainer class="relative">
+<div class="relative">
   {#each $taskDraft.tags as tag}
     <Tag {tag} />
   {/each}
@@ -57,6 +57,7 @@
   />
   {#if $listboxVisible}
     <div
+      use:comboboxPopover
       class="absolute top-full bg-surface-50-900-token z-10 py-1 drop-shadow-lg max-h-80 overflow-y-auto rounded"
     >
       <ul class="flex flex-col">

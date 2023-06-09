@@ -89,6 +89,6 @@ export function fromPos(x: number, y: number, date?: Dayjs) {
   // add 2.5pi, div by 2pi and modulo 1 to start at 12 o'clock and get a value between 0 and 1
   return new TimePos(
     (((-Math.atan2(-y, x) + Math.PI * 2.5) / (Math.PI * 2)) % 1) * 24 * 60 * 60 * 1000 +
-    (date?.valueOf() ?? 0)
+      (date?.valueOf() ?? 0)
   );
 }

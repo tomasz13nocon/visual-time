@@ -1,6 +1,6 @@
 <script lang="ts">
   import { fetchTaskTemplates, taskDraft, type TaskTemplate } from "./task";
-  import { createCombobox } from "$lib/combobox";
+  import { createCombobox } from "$lib/components/combobox/combobox";
   import TaskName from "./TaskName.svelte";
   import { user } from "$lib/stores";
   import { writable } from "svelte/store";
@@ -25,8 +25,8 @@
     filteredValues,
     inputValue,
     comboboxInput,
-    comboboxContainer,
     comboboxItem,
+    comboboxPopover,
   } = createCombobox(taskTemplates, {
     onSelection: (value) => {
       $taskDraft.color = value.color;
@@ -37,7 +37,7 @@
   $: $taskDraft.name = $inputValue;
 </script>
 
-<div use:comboboxContainer class="relative">
+<div class="relative">
   <label class="label relative">
     <input
       use:comboboxInput
@@ -55,6 +55,8 @@
   </label>
   {#if $listboxVisible && $filteredValues.length}
     <div
+      tabindex="-1"
+      use:comboboxPopover
       class="absolute top-full bg-surface-50-900-token z-10 py-1 drop-shadow-lg max-h-80 overflow-y-auto rounded card"
     >
       <div class="text-sm px-2 py-1">Recently tracked:</div>
