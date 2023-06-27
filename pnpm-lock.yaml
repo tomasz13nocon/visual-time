@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 dependencies:
   '@formkit/auto-animate':
     specifier: 1.0.0-beta.6
@@ -31,6 +35,12 @@ dependencies:
   pg-pool:
     specifier: ^3.6.0
     version: 3.6.0(pg@8.10.0)
+  sveltimate:
+    specifier: ../sveltimate
+    version: link:../sveltimate
+  uid:
+    specifier: ^2.0.2
+    version: 2.0.2
 
 devDependencies:
   '@playwright/test':
@@ -75,6 +85,9 @@ devDependencies:
   postcss:
     specifier: ^8.4.23
     version: 8.4.23
+  postcss-load-config:
+    specifier: ^4.0.1
+    version: 4.0.1(postcss@8.4.23)
   prettier:
     specifier: ^2.8.0
     version: 2.8.8
@@ -89,7 +102,10 @@ devDependencies:
     version: 3.59.0
   svelte-check:
     specifier: ^3.0.1
-    version: 3.3.1(postcss@8.4.23)(svelte@3.59.0)
+    version: 3.3.1(postcss-load-config@4.0.1)(postcss@8.4.23)(svelte@3.59.0)
+  svelte-preprocess:
+    specifier: ^5.0.3
+    version: 5.0.3(postcss-load-config@4.0.1)(postcss@8.4.23)(svelte@3.59.0)(typescript@5.0.4)
   tailwindcss:
     specifier: ^3.3.2
     version: 3.3.2
@@ -1018,6 +1034,11 @@ packages:
       lodash: 4.17.21
     dev: false
     optional: true
+
+  /@lukeed/csprng@1.1.0:
+    resolution: {integrity: sha512-Z7C/xXCiGWsg0KuKsHTKJxbWhpI3Vs5GwLfOean7MGyVFGqdRgBbAjOCh6u4bbjPc/8MJ2pZmK/0DLdCbivLDA==}
+    engines: {node: '>=8'}
+    dev: false
 
   /@nodelib/fs.scandir@2.1.5:
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -3730,7 +3751,7 @@ packages:
     engines: {node: '>= 0.4'}
     dev: true
 
-  /svelte-check@3.3.1(postcss@8.4.23)(svelte@3.59.0):
+  /svelte-check@3.3.1(postcss-load-config@4.0.1)(postcss@8.4.23)(svelte@3.59.0):
     resolution: {integrity: sha512-+Yb1F50M76JRPdZlxB8/blg75GiqKH/8QJTNtC3cKvxCbrRK7zpgmOg2oxem9n4eDAIllesm74guR3AnlAtNVg==}
     hasBin: true
     peerDependencies:
@@ -3743,7 +3764,7 @@ packages:
       picocolors: 1.0.0
       sade: 1.8.1
       svelte: 3.59.0
-      svelte-preprocess: 5.0.3(postcss@8.4.23)(svelte@3.59.0)(typescript@5.0.4)
+      svelte-preprocess: 5.0.3(postcss-load-config@4.0.1)(postcss@8.4.23)(svelte@3.59.0)(typescript@5.0.4)
       typescript: 5.0.4
     transitivePeerDependencies:
       - '@babel/core'
@@ -3766,7 +3787,7 @@ packages:
       svelte: 3.59.0
     dev: true
 
-  /svelte-preprocess@5.0.3(postcss@8.4.23)(svelte@3.59.0)(typescript@5.0.4):
+  /svelte-preprocess@5.0.3(postcss-load-config@4.0.1)(postcss@8.4.23)(svelte@3.59.0)(typescript@5.0.4):
     resolution: {integrity: sha512-GrHF1rusdJVbOZOwgPWtpqmaexkydznKzy5qIC2FabgpFyKN57bjMUUUqPRfbBXK5igiEWn1uO/DXsa2vJ5VHA==}
     engines: {node: '>= 14.10.0'}
     requiresBuild: true
@@ -3808,6 +3829,7 @@ packages:
       detect-indent: 6.1.0
       magic-string: 0.27.0
       postcss: 8.4.23
+      postcss-load-config: 4.0.1(postcss@8.4.23)
       sorcery: 0.11.0
       strip-indent: 3.0.0
       svelte: 3.59.0
@@ -4000,6 +4022,13 @@ packages:
     hasBin: true
     dev: false
     optional: true
+
+  /uid@2.0.2:
+    resolution: {integrity: sha512-u3xV3X7uzvi5b1MncmZo3i2Aw222Zk1keqLA1YkHldREkAhAqi65wuPfe7lHx8H/Wzy+8CE7S7uS3jekIM5s8g==}
+    engines: {node: '>=8'}
+    dependencies:
+      '@lukeed/csprng': 1.1.0
+    dev: false
 
   /underscore@1.13.6:
     resolution: {integrity: sha512-+A5Sja4HP1M08MaXya7p5LvjuM7K6q/2EaC0+iovj/wOcMsTzMvDFbasi/oSapiwOlt252IqsKqPjCl7huKS0A==}

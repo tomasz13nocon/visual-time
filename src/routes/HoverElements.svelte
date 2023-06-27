@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Writable } from "svelte/store";
-  import { colors, colorsLight, type Task } from "./task";
+  import { colors, type Task } from "./task";
   import TaskArc from "./TaskArc.svelte";
   import { fromMs, rInner, rOuter } from "./chart";
   import BulletText from "./BulletText.svelte";
@@ -50,7 +50,7 @@
     <BulletText
       x={taskCenter.toPosX(rOuter - (rOuter - rInner) / 2)}
       y={taskCenter.toPosY(rOuter - (rOuter - rInner) / 2)}
-      color={colorsLight[colors.indexOf($task.color)] ?? $task.color}
+      color={colors.find((c) => c.color === $task.color)?.light || $task.color}
     >
       {$task.name}
     </BulletText>

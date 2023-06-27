@@ -90,7 +90,7 @@
     <IconButton icon="eva:plus-fill" on:click={addTask} title="Add task entry" />
   </div>
 
-  <TaskTagsInput />
+  <!-- <TaskTagsInput /> -->
 
   <label class="flex items-center space-x-2 w-fit">
     <input class="checkbox" type="checkbox" bind:checked={snapToLast} />
@@ -124,9 +124,10 @@
 
   <div>
     <div class="flex gap-1">
-      {#each colors.slice(0, 8) as color}
+      {#each colors.slice(0, 8) as { color, label }}
         <ColorButton
           {color}
+          ariaLabel={label}
           selected={$taskDraft.color === color}
           on:click={() => {
             $taskDraft.color = color;
@@ -136,9 +137,10 @@
     </div>
     {#if $showMoreColors}
       <div class="flex gap-1 mt-1">
-        {#each colors.slice(8, 16) as color}
+        {#each colors.slice(8, 16) as { color, label }}
           <ColorButton
             {color}
+            ariaLabel={label}
             selected={$taskDraft.color === color}
             on:click={() => {
               $taskDraft.color = color;

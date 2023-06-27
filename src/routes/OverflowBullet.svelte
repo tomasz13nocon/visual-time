@@ -1,6 +1,6 @@
 <script lang="ts">
   import { get, type Writable } from "svelte/store";
-  import { type Task, colors, colorsLight } from "./task";
+  import { type Task, colors } from "./task";
   import { clampEnd, clampStart } from "$lib/util";
   import BulletText from "./BulletText.svelte";
   import { fromMs, rInner } from "./chart";
@@ -28,7 +28,7 @@
 <BulletText
   x={fromMs(clampedDate).toPosX(radius)}
   y={fromMs(clampedDate).toPosY(radius)}
-  color={colorsLight[colors.indexOf($task.color)] ?? $task.color}
+  color={colors.find((c) => c.color === $task.color)?.light || $task.color}
 >
   {negative ? "-" : "+"}{diffDays}d
 </BulletText>

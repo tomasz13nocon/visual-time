@@ -13,41 +13,22 @@ export interface TagTemplate {
 
 // prettier-ignore
 export const colors = [
-  "#f43f5e",
-  "#f97316",
-  "#eab308",
-  "#84cc16",
-  "#0ea5e9",
-  "#8b5cf6",
-  "#d946ef",
-  "#878787",
-  "#A72620",
-  "#A97648",
-  "#CDCD39",
-  "#43BB66",
-  "#2CD3CF",
-  "#88BAF4",
-  "#2727E3",
-  "#2C2C2C",
-];
-
-export const colorsLight = [
-  "#F5768C",
-  "#F9A36E",
-  "#F9C34E",
-  "#A3D06B",
-  "#5CA9F9",
-  "#A17CF7",
-  "#D46CF7",
-  "#A3A3A3",
-  "#A74843",
-  "#B7895F",
-  "#D4D46C",
-  "#74CF8E",
-  "#5EE0DD",
-  "#A6CCF7",
-  "#4E4EEB",
-  "#3C3C3C",
+  { color: "#f43f5e", light: "#F5768C", label: "red" },
+  { color: "#f97316", light: "#F9A36E", label: "orange" },
+  { color: "#eab308", light: "#F9C34E", label: "yellow" },
+  { color: "#84cc16", light: "#A3D06B", label: "green" },
+  { color: "#0ea5e9", light: "#5CA9F9", label: "blue" },
+  { color: "#8b5cf6", light: "#A17CF7", label: "purple" },
+  { color: "#d946ef", light: "#D46CF7", label: "pink" },
+  { color: "#878787", light: "#A3A3A3", label: "grey" },
+  { color: "#A72620", light: "#A74843", label: "dark red" },
+  { color: "#A97648", light: "#B7895F", label: "brown" },
+  { color: "#CDCD39", light: "#D4D46C", label: "lime" },
+  { color: "#43BB66", light: "#74CF8E", label: "dark green" },
+  { color: "#2CD3CF", light: "#5EE0DD", label: "cyan" },
+  { color: "#88BAF4", light: "#A6CCF7", label: "sky blue" },
+  { color: "#2727E3", light: "#4E4EEB", label: "dark blue" },
+  { color: "#2C2C2C", light: "#3C3C3C", label: "black" },
 ];
 
 export const defaultTaskNames = [
@@ -72,8 +53,6 @@ export const defaultTaskNames = [
   "Delaying the crisis",
 ];
 
-export type TaskColor = (typeof colors)[0];
-
 export const fetchError = writable("");
 
 export interface Tag {
@@ -85,7 +64,7 @@ export class Task {
   // we can have multiple unpersisted tasks, so we need to have a unique local id
   id = Math.random();
   name = "";
-  color = colors[4];
+  color = colors[4].color;
   startDate = 0;
   endDate = 0;
   active = false;

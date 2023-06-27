@@ -78,6 +78,15 @@
       title="Change color"
     />
     <IconButton
+      icon="eva:clock-fill"
+      medium
+      bind:element={colorEditButton}
+      on:click={() => {
+        editingColor = !editingColor;
+      }}
+      title="Change color"
+    />
+    <IconButton
       icon="eva:trash-2-outline"
       medium
       on:click={() => tracker.removeTask($task)}
@@ -89,9 +98,10 @@
         use:clickOutside={colorEditButton}
         on:clickOutside={() => (editingColor = false)}
       >
-        {#each colors as color}
+        {#each colors as { color, label }}
           <ColorButton
             {color}
+            ariaLabel={label}
             selected={$task.color === color}
             small
             on:click={() => {
