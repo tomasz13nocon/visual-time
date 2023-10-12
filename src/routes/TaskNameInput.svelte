@@ -38,7 +38,7 @@
     showOnFocus: true,
   });
 
-  $: $taskDraft.name = $inputValue;
+  // $: $taskDraft.name = $inputValue;
 </script>
 
 <div class="">
@@ -48,6 +48,7 @@
     class="input pr-8"
     type="text"
     placeholder="What are you working on?"
+    bind:value={$taskDraft.name}
     on:focus={getTemplates}
     on:keydown|capture={(e) => {
       if (e.key === "Enter" && !$focusedValue) {

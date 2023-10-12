@@ -1,7 +1,7 @@
 import pg from "pg";
-import { PrismaClient } from "@prisma/client";
+import Prisma from "@prisma/client";
 
-const prisma = new PrismaClient({
+const prisma = new Prisma.PrismaClient({
   // log: [
   //   {
   //     emit: "event",

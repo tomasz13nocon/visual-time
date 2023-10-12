@@ -44,7 +44,6 @@
   }
 
   function startTracking() {
-    console.log($taskDraft);
     $taskDraft.startDate = getSnappedTime();
     tracker.addTask($taskDraft, true);
     $taskDraft = createTaskDraft($taskDraft);
@@ -90,7 +89,7 @@
     <IconButton icon="eva:plus-fill" on:click={addTask} title="Add task entry" />
   </div>
 
-  <!-- <TaskTagsInput /> -->
+  <TaskTagsInput />
 
   <label class="flex items-center space-x-2 w-fit">
     <input class="checkbox" type="checkbox" bind:checked={snapToLast} />
