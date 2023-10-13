@@ -10,6 +10,7 @@
   import { minidenticon } from "minidenticons";
   import { clickOutside } from "$lib/clickOutside";
   import { fetchError } from "./task";
+  import { dev } from "$app/environment";
 
   initializeStores();
   const toastStore = getToastStore();
@@ -45,6 +46,9 @@
     <AppBar>
       <svelte:fragment slot="lead">
         <a href="/" class="text-lg uppercase tracking-wider">visual<strong>ti.me</strong></a>
+        {#if !dev}
+          <div class="ml-8 text-yellow-700 font-bold text-lg">🛠️ WORK IN PROGRESS PREVIEW 🛠️</div>
+        {/if}
       </svelte:fragment>
       <svelte:fragment slot="trail">
         <LightSwitch />
