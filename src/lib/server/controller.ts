@@ -1,4 +1,4 @@
-import app from "$lib/server/firebaseAdmin";
+import { auth } from "$lib/server/firebaseAdmin";
 
 export async function authorize(request: Request) {
   let token = request.headers.get("Authorization");
@@ -7,7 +7,7 @@ export async function authorize(request: Request) {
   }
   token = token.slice(7);
 
-  const { user_id: userId } = await app.auth().verifyIdToken(token);
+  const { user_id: userId } = await auth.verifyIdToken(token);
   // TODO check if invalid
 
   return { userId };
