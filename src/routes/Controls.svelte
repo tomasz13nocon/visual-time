@@ -98,7 +98,7 @@
 
   <div>
     {#if addTaskError.msg}
-      <div class="alert variant-ghost-error py-2 px-4 mb-2" transition:slide={{ duration: 300 }}>
+      <div class="alert variant-ghost-error py-2 px-4 mb-2" transition:slide|global={{ duration: 300 }}>
         <div class="alert-message">
           {addTaskError.msg}
         </div>
